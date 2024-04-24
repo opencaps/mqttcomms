@@ -3,8 +3,10 @@ package mqttcomms
 const (
 	TopAdminEvt = "AdminEvents"
 	TopAdminOrd = "AdminOrders"
-	TopDevOrd   = "DeviceOrders"
 	TopDevEvt   = "DeviceEvents"
+	TopDevOrd   = "DeviceOrders"
 	TopEnoEvt   = "EnoceanEvents"
 	TopEnoOrd   = "EnoceanOrders"
+	TimeEvt     = "TimeEvents"
+	TimeOrd     = "TimeOrders"
 )
