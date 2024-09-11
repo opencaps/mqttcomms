@@ -13,6 +13,8 @@ const (
 	AD_GET_INFO        = 0x03
 	AD_GET_STATUS      = 0x04
 	AD_RESET           = 0x05
+	AD_ALIVE           = 0x06
+	AD_BLE_PASSKEY     = 0x07
 	AD_GOODBYE         = 0xFF
 
 	// Time methods
