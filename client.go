@@ -15,6 +15,7 @@ import (
 // Client structure for mqtt client
 type Client struct {
 	client      MQTT.Client
+	url         string
 	Log         *logging.Logger
 	wg          sync.WaitGroup
 	IsConnected chan bool
@@ -49,6 +50,12 @@ func (c *Client) onConnectHandler(client MQTT.Client) {
 	c.IsConnected <- true
 }
 
+func (c *Client) onConnectionLostHandler(client MQTT.Client, err error) {
+	c.Log.Error("MQTT connection lost", err)
+	c.IsConnected <- false
+	c.wg.Add(1)
+}
+
 // InitMqtt initialze mqtt client
 func (c *Client) InitMqtt(conf *Conf) {
 	c.IsConnected = make(chan bool)
@@ -62,13 +69,14 @@ func (c *Client) InitMqtt(conf *Conf) {
 	opts.SetPassword(conf.MqttPass)
 	opts.SetTLSConfig(tlsconfig)
 	opts.SetOnConnectHandler(c.onConnectHandler)
-
+	opts.SetConnectionLostHandler(c.onConnectionLostHandler)
 	opts.AddBroker("mqtts://" + conf.MqttUrl)
-
-	c.Log.Info("Trying to connect to the broker mqtts://" + conf.MqttUrl)
-
+	c.url = "mqtts://" + conf.MqttUrl
 	c.client = MQTT.NewClient(opts)
+}
 
+func (c *Client) Connect() {
+	c.Log.Info("Trying to connect to the broker", c.url)
 	retry := time.NewTicker(5 * time.Second)
 	for range retry.C {
 		if token := c.client.Connect(); token.Wait() && token.Error() == nil {
