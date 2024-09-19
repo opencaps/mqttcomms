@@ -5,7 +5,9 @@ import (
 	"crypto/x509"
 	"errors"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -15,20 +17,21 @@ import (
 // Client structure for mqtt client
 type Client struct {
 	client      MQTT.Client
-	url         string
+	conf        *Conf
 	Log         *logging.Logger
 	wg          sync.WaitGroup
 	IsConnected chan bool
+	sighup      chan os.Signal
 	sync.Mutex
 }
 
-func (c *Client) newTLSConfig(conf *Conf) *tls.Config {
-	cert, err := tls.LoadX509KeyPair(conf.MqttCertPath, conf.MqttKeyPath)
+func (c *Client) newTLSConfig() *tls.Config {
+	cert, err := tls.LoadX509KeyPair(c.conf.MqttCertPath, c.conf.MqttKeyPath)
 	if err != nil {
 		c.Log.Fatal("Error loading client certificate", err)
 	}
 
-	caCert, err := os.ReadFile(conf.MqttCAPath)
+	caCert, err := os.ReadFile(c.conf.MqttCAPath)
 	if err != nil {
 		c.Log.Fatal("Error loading CA certificate", err)
 	}
@@ -46,42 +49,63 @@ func (c *Client) newTLSConfig(conf *Conf) *tls.Config {
 
 func (c *Client) onConnectHandler(client MQTT.Client) {
 	c.Log.Info("MQTT connected")
-	c.wg.Done()
 	c.IsConnected <- true
 }
 
 func (c *Client) onConnectionLostHandler(client MQTT.Client, err error) {
 	c.Log.Error("MQTT connection lost", err)
 	c.IsConnected <- false
-	c.wg.Add(1)
 }
 
 // InitMqtt initialze mqtt client
 func (c *Client) InitMqtt(conf *Conf) {
 	c.IsConnected = make(chan bool)
-	c.wg.Add(1)
+	c.sighup = make(chan os.Signal, 1)
+	signal.Notify(c.sighup, os.Interrupt, syscall.SIGHUP)
+	c.conf = conf
 
-	tlsconfig := c.newTLSConfig(conf)
-
-	opts := MQTT.NewClientOptions()
-	opts.SetClientID(conf.ClientID + conf.UniqueID)
-	opts.SetUsername(conf.MqttUser)
-	opts.SetPassword(conf.MqttPass)
-	opts.SetTLSConfig(tlsconfig)
-	opts.SetOnConnectHandler(c.onConnectHandler)
-	opts.SetConnectionLostHandler(c.onConnectionLostHandler)
-	opts.AddBroker("mqtts://" + conf.MqttUrl)
-	c.url = "mqtts://" + conf.MqttUrl
-	c.client = MQTT.NewClient(opts)
+	go c.handleSighup()
 }
 
 func (c *Client) Connect() {
-	c.Log.Info("Trying to connect to the broker", c.url)
+	tlsConfig := c.newTLSConfig()
+
+	user, err := os.ReadFile(c.conf.MqttUserPath)
+	if err != nil {
+		c.Log.Fatal("Error reading username file", err)
+	}
+
+	pass, err := os.ReadFile(c.conf.MqttPassPath)
+	if err != nil {
+		c.Log.Fatal("Error reading password file", err)
+	}
+
+	opts := MQTT.NewClientOptions()
+	opts.SetUsername(string(user))
+	opts.SetPassword(string(pass))
+	opts.AddBroker("mqtts://" + c.conf.MqttUrl)
+	opts.SetClientID(c.conf.ClientID + c.conf.UniqueID)
+	opts.SetTLSConfig(tlsConfig)
+	opts.SetOnConnectHandler(c.onConnectHandler)
+	opts.SetConnectionLostHandler(c.onConnectionLostHandler)
+	c.client = MQTT.NewClient(opts)
+
+	c.Log.Info("Trying to connect to the broker mqtts://" + c.conf.MqttUrl)
+
 	retry := time.NewTicker(5 * time.Second)
 	for range retry.C {
 		if token := c.client.Connect(); token.Wait() && token.Error() == nil {
 			return
 		}
+	}
+}
+
+// Handle sighup signal
+func (c *Client) handleSighup() {
+	for range c.sighup {
+		c.Log.Info("SIGHUP received, reconnecting")
+		c.client.Disconnect(1000)
+		c.Connect()
 	}
 }
 
