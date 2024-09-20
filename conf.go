@@ -3,8 +3,7 @@ package mqttcomms
 type Conf struct {
 	ClientID     string
 	MqttUrl      string
-	MqttUserPath string
-	MqttPassPath string
+	MqttCredPath string
 	MqttCAPath   string
 	MqttCertPath string
 	MqttKeyPath  string

@@ -1,9 +1,11 @@
 package mqttcomms
 
 import (
+	"bufio"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -47,6 +49,35 @@ func (c *Client) newTLSConfig() *tls.Config {
 	return tlsConfig
 }
 
+func (c *Client) readCredentials() (string, string, error) {
+	file, err := os.Open(c.conf.MqttCredPath)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to open credentials file: %v", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var username, password string
+
+	if scanner.Scan() {
+		username = scanner.Text()
+	} else {
+		return "", "", fmt.Errorf("username not found in credentials file")
+	}
+
+	if scanner.Scan() {
+		password = scanner.Text()
+	} else {
+		return "", "", fmt.Errorf("password not found in credentials file")
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", "", fmt.Errorf("error reading credentials: %v", err)
+	}
+
+	return username, password, nil
+}
+
 func (c *Client) onConnectHandler(client MQTT.Client) {
 	c.Log.Info("MQTT connected")
 	c.IsConnected <- true
@@ -70,19 +101,14 @@ func (c *Client) InitMqtt(conf *Conf) {
 func (c *Client) Connect() {
 	tlsConfig := c.newTLSConfig()
 
-	user, err := os.ReadFile(c.conf.MqttUserPath)
+	user, pass, err := c.readCredentials()
 	if err != nil {
-		c.Log.Fatal("Error reading username file", err)
-	}
-
-	pass, err := os.ReadFile(c.conf.MqttPassPath)
-	if err != nil {
-		c.Log.Fatal("Error reading password file", err)
+		c.Log.Fatal("Error reading credentials", err)
 	}
 
 	opts := MQTT.NewClientOptions()
-	opts.SetUsername(string(user))
-	opts.SetPassword(string(pass))
+	opts.SetUsername(user)
+	opts.SetPassword(pass)
 	opts.AddBroker("mqtts://" + c.conf.MqttUrl)
 	opts.SetClientID(c.conf.ClientID + c.conf.UniqueID)
 	opts.SetTLSConfig(tlsConfig)
