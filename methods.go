@@ -15,6 +15,7 @@ const (
 	AD_RESET           = 0x05
 	AD_ALIVE           = 0x06
 	AD_BLE_PASSKEY     = 0x07
+	AD_SET_ENTITY_ID   = 0x11
 	AD_GOODBYE         = 0xFF
 
 	// Time methods
