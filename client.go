@@ -174,7 +174,7 @@ func (c *Client) handleExpiracy() {
 
 	block, _ := pem.Decode(certPEM)
 	if block == nil {
-		panic("failed to parse certificate PEM")
+		c.Log.Fatal("failed to parse certificate PEM")
 	}
 
 	cert, err := x509.ParseCertificate(block.Bytes)
@@ -182,17 +182,22 @@ func (c *Client) handleExpiracy() {
 		c.Log.Fatal("Error parsing certificate", err)
 	}
 
-	expiration := cert.NotAfter
+	// Calculate 80% of the certificate's validity period
+	validityPeriod := cert.NotAfter.Sub(cert.NotBefore)
+	timeToWait := validityPeriod * 80 / 100
 
-	timeToExpire := time.Until(expiration)
-
-	if timeToExpire < 0 {
-		c.Log.Fatal("Certificate already expired")
+	if timeToWait < 0 {
+		time.Sleep(time.Hour)
+		go c.handleExpiracy()
+		return
 	}
 
-	c.Log.Info("Certificate will expire in", timeToExpire)
+	expirationTime := cert.NotAfter.Add(-timeToWait)
+	timeUntilExpiration := time.Until(expirationTime).Round(time.Second)
 
-	timer := time.NewTimer(timeToExpire - 24*time.Hour)
+	c.Log.Info("Certificate will be renewed in", timeUntilExpiration)
+
+	timer := time.NewTimer(timeUntilExpiration)
 	<-timer.C
 
 	// Reconnect

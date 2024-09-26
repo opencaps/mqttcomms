@@ -14,7 +14,7 @@ const (
 	AD_GET_STATUS      = 0x04
 	AD_RESET           = 0x05
 	AD_ALIVE           = 0x06
-	AD_BLE_PASSKEY     = 0x07
+	AD_BLE_COMFIRM     = 0x07
 	AD_SET_ENTITY_ID   = 0x11
 	AD_GOODBYE         = 0xFF
 
