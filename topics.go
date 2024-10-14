@@ -11,4 +11,6 @@ const (
 	TopTelemetryOrd = "TelemetryOrders"
 	TimeEvt         = "TimeEvents"
 	TimeOrd         = "TimeOrders"
+	TopCalEvt       = "CalendarEvents"
+	TopCalOrd       = "CalendarOrders"
 )
