@@ -25,9 +25,11 @@ const (
 )
 
 const (
-	REQACK = 0x01
-	NOACK  = 0x02
-	ISACK  = 0x03
+	REQACK  = 0x01
+	NOACK   = 0x02
+	ISACK   = 0x03
+	REQRESP = 0x04
+	ISRESP  = 0x05
 )
 
 const (
