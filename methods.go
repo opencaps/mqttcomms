@@ -2,10 +2,12 @@ package mqttcomms
 
 const (
 	// Device methods
-	DEV_ADD_NEW     = 0x00
-	DEV_ADD         = 0x01
-	DEV_REMOVE      = 0x02
-	DEV_UPDATE_ZONE = 0x03
+	DEV_ADD_NEW      = 0x00
+	DEV_ADD          = 0x01
+	DEV_REMOVE       = 0x02
+	DEV_GET_ACTUATOR = 0x03
+	DEV_GET_SENSOR   = 0x04
+	DEV_UPDATE_ZONE  = 0x05
 
 	// Admin methods
 	AD_INIT_UPDATE     = 0x00
