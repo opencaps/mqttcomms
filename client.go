@@ -184,7 +184,7 @@ func (c *Client) handleExpiracy() {
 
 	// Calculate 80% of the certificate's validity period
 	validityPeriod := cert.NotAfter.Sub(cert.NotBefore)
-	timeToWait := validityPeriod * 80 / 100
+	timeToWait := validityPeriod * 95 / 100
 
 	if timeToWait < 0 {
 		time.Sleep(time.Hour)
@@ -192,7 +192,7 @@ func (c *Client) handleExpiracy() {
 		return
 	}
 
-	expirationTime := cert.NotAfter.Add(-timeToWait)
+	expirationTime := cert.NotBefore.Add(timeToWait)
 	timeUntilExpiration := time.Until(expirationTime).Round(time.Second)
 
 	c.Log.Info("Certificate will be renewed in", timeUntilExpiration)
