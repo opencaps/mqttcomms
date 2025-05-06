@@ -10,16 +10,19 @@ const (
 	DEV_UPDATE_ZONE  = 0x05
 
 	// Admin methods
-	AD_INIT_UPDATE     = 0x00
-	AD_SEND_CHUNK      = 0x01
-	AD_UPDATE_FINISHED = 0x02
-	AD_GET_INFO        = 0x03
-	AD_GET_STATUS      = 0x04
-	AD_RESET           = 0x05
-	AD_ALIVE           = 0x06
-	AD_BLE_COMFIRM     = 0x07
-	AD_SET_ENTITY_ID   = 0x11
-	AD_GOODBYE         = 0xFF
+	AD_NRF_INIT_UPDATE         = 0x00
+	AD_NRF_SEND_CHUNK          = 0x01
+	AD_NRF_UPDATE_FINISHED     = 0x02
+	AD_GET_INFO                = 0x03
+	AD_GET_STATUS              = 0x04
+	AD_RESET                   = 0x05
+	AD_ALIVE                   = 0x06
+	AD_BLE_COMFIRM             = 0x07
+	AD_SET_ENTITY_ID           = 0x11
+	AD_ESP32S3_INIT_UPDATE     = 0x12
+	AD_ESP32S3_SEND_CHUNK      = 0x13
+	AD_ESP32S3_UPDATE_FINISHED = 0x14
+	AD_GOODBYE                 = 0xFF
 
 	// Time methods
 	TM_GET_TIME = 0x00
