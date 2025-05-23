@@ -18,10 +18,11 @@ const (
 	AD_RESET                   = 0x05
 	AD_ALIVE                   = 0x06
 	AD_BLE_COMFIRM             = 0x07
+	AD_ESP32S3_INIT_UPDATE     = 0x08
+	AD_ESP32S3_SEND_CHUNK      = 0x09
+	AD_ESP32S3_UPDATE_FINISHED = 0x0A
 	AD_SET_ENTITY_ID           = 0x11
-	AD_ESP32S3_INIT_UPDATE     = 0x12
-	AD_ESP32S3_SEND_CHUNK      = 0x13
-	AD_ESP32S3_UPDATE_FINISHED = 0x14
+	AD_FACTORY_RESET           = 0x12
 	AD_GOODBYE                 = 0xFF
 
 	// Time methods
