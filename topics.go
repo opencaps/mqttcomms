@@ -13,4 +13,6 @@ const (
 	TimeOrd         = "TimeOrders"
 	TopCalEvt       = "CalendarEvents"
 	TopCalOrd       = "CalendarOrders"
+	TopUIEvt        = "UIEvents"
+	TopUIOrd        = "UIOrders"
 )

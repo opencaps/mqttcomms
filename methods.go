@@ -48,4 +48,7 @@ const (
 
 	// Telemetry methods
 	TELEMETRY = 0x00
+
+	// UI methods
+	UI_SEND_ZONE_LIST = 0x00
 )
