@@ -174,6 +174,10 @@ Predefined topics are available in [`topics.go`](topics.go):
   - `TopCalEvt`: Calendar events.
   - `TopCalOrd`: Calendar orders.
 
+- **UI**:
+  - `TopUIEvt`: UI events.
+  - `TopUIOrd`: UI orders.
+
 ---
 
 ## Methods
@@ -194,6 +198,11 @@ Predefined methods are available in [`methods.go`](methods.go):
 
 - **Telemetry Methods**:
   - `TELEMETRY`.
+
+- **UI Methods**:
+  - `UI_ZONE_LIST`: Request/send zone list.
+  - `UI_BUILDING_NAME`: Request/send building name.
+  - `UI_FULL_INFO`: Request/send full UI information.
 
 ---
 
