@@ -1,7 +1,6 @@
 # MqttComms: MQTT Protocol Handling for Opencaps Devices
 
 [![AsyncAPI](https://img.shields.io/badge/AsyncAPI-3.0.0-blue.svg)](https://studio.asyncapi.com/?url=https://raw.githubusercontent.com/opencaps/mqttcomms/main/asyncapi.yaml)
-[![AsyncAPI Docs](https://img.shields.io/badge/API%20Docs-View%20Online-green.svg)](https://opencaps.github.io/mqttcomms/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Overview
@@ -29,7 +28,6 @@ The MQTT API is fully documented using the [AsyncAPI](https://www.asyncapi.com/)
 ### View Documentation
 
 - **Interactive Studio**: [Open in AsyncAPI Studio](https://studio.asyncapi.com/?url=https://raw.githubusercontent.com/opencaps/mqttcomms/main/asyncapi.yaml)
-- **HTML Documentation**: [View Online](https://opencaps.github.io/mqttcomms/) (hosted via GitHub Pages)
 - **Raw Specification**: [asyncapi.yaml](asyncapi.yaml)
 
 ### Generate Documentation Locally
@@ -38,11 +36,11 @@ The MQTT API is fully documented using the [AsyncAPI](https://www.asyncapi.com/)
 # Install AsyncAPI CLI
 npm install -g @asyncapi/cli
 
+# Validate the specification
+asyncapi validate asyncapi.yaml
+
 # Generate HTML documentation
 asyncapi generate fromTemplate asyncapi.yaml @asyncapi/html-template -o docs
-
-# Or use the provided script
-./scripts/generate-docs.sh
 ```
 
 ---

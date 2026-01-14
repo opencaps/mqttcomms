@@ -570,44 +570,20 @@ components:
   parameters:
     uid:
       description: Unique identifier of the bridge
-      schema:
-        type: string
-        example: "BRIDGE001"
     entityId:
       description: Unique identifier of the entity
-      schema:
-        type: string
-        example: "ENTITY001"
     timezone:
       description: IANA timezone name
-      schema:
-        type: string
-        example: "Europe/Paris"
     fact:
       description: Data factor identifier
-      schema:
-        type: string
-        example: "temperature"
     zoneId:
       description: Zone identifier
-      schema:
-        type: string
-        example: "zone1"
     sensorId:
       description: Sensor identifier
-      schema:
-        type: string
-        example: "sensor001"
     actuatorId:
       description: Actuator identifier
-      schema:
-        type: string
-        example: "actuator001"
     itemId:
       description: Item identifier
-      schema:
-        type: string
-        example: "item001"
 
   # ============================================================================
   # SECURITY SCHEMES
@@ -636,9 +612,6 @@ components:
         $ref: '#/components/schemas/UpdateInitPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x00'
@@ -653,9 +626,6 @@ components:
         $ref: '#/components/schemas/UpdatePacketPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x01'
@@ -670,9 +640,6 @@ components:
         $ref: '#/components/schemas/EmptyPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x02'
@@ -687,9 +654,6 @@ components:
         $ref: '#/components/schemas/UpdateInitPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x08'
@@ -704,9 +668,6 @@ components:
         $ref: '#/components/schemas/UpdatePacketPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x09'
@@ -721,9 +682,6 @@ components:
         $ref: '#/components/schemas/Esp32UpdateEndPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x0A'
@@ -738,9 +696,6 @@ components:
         $ref: '#/components/schemas/EmptyPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x03'
@@ -755,9 +710,6 @@ components:
         $ref: '#/components/schemas/BridgeInfoPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x03'
@@ -772,9 +724,6 @@ components:
         $ref: '#/components/schemas/EmptyPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x04'
@@ -789,9 +738,6 @@ components:
         $ref: '#/components/schemas/StatusCodePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x04'
@@ -806,9 +752,6 @@ components:
         $ref: '#/components/schemas/EmptyPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x05'
@@ -823,9 +766,6 @@ components:
         $ref: '#/components/schemas/EntityIdPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x11'
@@ -840,9 +780,6 @@ components:
         $ref: '#/components/schemas/AckPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-op: '0x03'
@@ -859,9 +796,6 @@ components:
         $ref: '#/components/schemas/StatusCodePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x04'
@@ -876,10 +810,6 @@ components:
         $ref: '#/components/schemas/StatusCodePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
-          retain: true
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x04'
@@ -897,9 +827,6 @@ components:
         $ref: '#/components/schemas/AddEnoceanNewTypePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x00'
@@ -914,9 +841,6 @@ components:
         $ref: '#/components/schemas/AddEnoceanExistingTypePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x01'
@@ -931,9 +855,6 @@ components:
         $ref: '#/components/schemas/DeleteEnoceanPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x02'
@@ -948,9 +869,6 @@ components:
         $ref: '#/components/schemas/EmptyPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x03'
@@ -965,9 +883,6 @@ components:
         $ref: '#/components/schemas/EmptyPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x04'
@@ -982,9 +897,6 @@ components:
         $ref: '#/components/schemas/ChangeZonePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x05'
@@ -999,9 +911,6 @@ components:
         $ref: '#/components/schemas/AddErlPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x06'
@@ -1016,9 +925,6 @@ components:
         $ref: '#/components/schemas/EmptyPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x07'
@@ -1033,9 +939,6 @@ components:
         $ref: '#/components/schemas/ZonePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x08'
@@ -1050,9 +953,6 @@ components:
         $ref: '#/components/schemas/ZonePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x09'
@@ -1067,9 +967,6 @@ components:
         $ref: '#/components/schemas/AddEnoceanByEepPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x09'
@@ -1084,9 +981,6 @@ components:
         $ref: '#/components/schemas/AckPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-op: '0x03'
@@ -1100,9 +994,6 @@ components:
         $ref: '#/components/schemas/DeviceListPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x03'
@@ -1117,9 +1008,6 @@ components:
         $ref: '#/components/schemas/DeviceListPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x04'
@@ -1137,9 +1025,6 @@ components:
         $ref: '#/components/schemas/TimezonePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x00'
@@ -1154,9 +1039,6 @@ components:
         $ref: '#/components/schemas/TimePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x00'
@@ -1171,9 +1053,6 @@ components:
         $ref: '#/components/schemas/TimePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 0
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x02'
@@ -1191,9 +1070,6 @@ components:
         $ref: '#/components/schemas/PlanningPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x00'
@@ -1208,9 +1084,6 @@ components:
         $ref: '#/components/schemas/ExceptionsPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x01'
@@ -1225,9 +1098,6 @@ components:
         $ref: '#/components/schemas/ZonePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x02'
@@ -1242,9 +1112,6 @@ components:
         $ref: '#/components/schemas/ZonePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x03'
@@ -1259,9 +1126,6 @@ components:
         $ref: '#/components/schemas/ZonePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x04'
@@ -1276,9 +1140,6 @@ components:
         $ref: '#/components/schemas/ZonePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x05'
@@ -1293,9 +1154,6 @@ components:
         $ref: '#/components/schemas/PlanningPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x02'
@@ -1310,9 +1168,6 @@ components:
         $ref: '#/components/schemas/ExceptionsPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x03'
@@ -1327,9 +1182,6 @@ components:
         $ref: '#/components/schemas/AckPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-op: '0x03'
@@ -1343,9 +1195,6 @@ components:
         $ref: '#/components/schemas/PlanningGroupPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x06'
@@ -1360,9 +1209,6 @@ components:
         $ref: '#/components/schemas/PlanningEventPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x07'
@@ -1377,9 +1223,6 @@ components:
         $ref: '#/components/schemas/GroupIdPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x08'
@@ -1394,9 +1237,6 @@ components:
         $ref: '#/components/schemas/DerogationPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x03'
@@ -1414,9 +1254,6 @@ components:
         $ref: '#/components/schemas/TelemetryPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 0
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x00'
@@ -1434,9 +1271,6 @@ components:
         $ref: '#/components/schemas/BuildingIdPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x00'
@@ -1451,9 +1285,6 @@ components:
         $ref: '#/components/schemas/ZoneListPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x00'
@@ -1468,9 +1299,6 @@ components:
         $ref: '#/components/schemas/BuildingIdPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x01'
@@ -1485,9 +1313,6 @@ components:
         $ref: '#/components/schemas/BuildingNamePayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x01'
@@ -1502,9 +1327,6 @@ components:
         $ref: '#/components/schemas/BuildingIdPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x02'
@@ -1519,9 +1341,6 @@ components:
         $ref: '#/components/schemas/FullUiInfoPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
-      bindings:
-        mqtt:
-          qos: 1
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x02'
