@@ -1,0 +1,2193 @@
+asyncapi: 3.0.0
+info:
+  title: OpenCaps MQTT Communication API
+  version: '1.0.0'
+  description: |
+    This specification defines the MQTT communication protocol for OpenCaps IoT bridges.
+    It covers the communication between bridges and backend services for device management,
+    firmware updates, time synchronization, calendar scheduling, telemetry, and UI interactions.
+
+    ## Message Format
+    All messages follow a binary protocol with the structure:
+    - **HEADER** (10 bytes): Magic + Seq + Op + Type + Length
+    - **BODY** (variable): Method-specific payload
+    - **CRC** (2 bytes): CRC16 CCITT checksum
+
+    ## Topic Structure
+    - `{UID}/XXXOrders`: Commands sent to bridges (bridges subscribe)
+    - `{UID}/XXXEvents`: Events published by bridges (services subscribe)
+
+  contact:
+    name: OpenCaps Support
+    email: support@opencaps.io
+  license:
+    name: GNU GPL v3
+    url: https://www.gnu.org/licenses/gpl-3.0.html
+
+defaultContentType: application/octet-stream
+
+servers:
+  production:
+    host: mqtt.opencaps.io:8883
+    protocol: mqtts
+    description: Production MQTT broker with TLS
+    security:
+      - $ref: '#/components/securitySchemes/userPassword'
+      - $ref: '#/components/securitySchemes/X509'
+  development:
+    host: localhost:1883
+    protocol: mqtt
+    description: Local development MQTT broker
+
+channels:
+  # ============================================================================
+  # ADMIN CHANNELS
+  # ============================================================================
+  adminOrders:
+    address: '{uid}/AdminOrders'
+    description: Administrative commands sent to bridges (firmware updates, reset, status)
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      nrfUpdateInit:
+        $ref: '#/components/messages/NrfUpdateInit'
+      nrfUpdatePacket:
+        $ref: '#/components/messages/NrfUpdatePacket'
+      nrfUpdateEnd:
+        $ref: '#/components/messages/NrfUpdateEnd'
+      esp32UpdateInit:
+        $ref: '#/components/messages/Esp32UpdateInit'
+      esp32UpdatePacket:
+        $ref: '#/components/messages/Esp32UpdatePacket'
+      esp32UpdateEnd:
+        $ref: '#/components/messages/Esp32UpdateEnd'
+      bridgeInfoRequest:
+        $ref: '#/components/messages/BridgeInfoRequest'
+      bridgeStatusRequest:
+        $ref: '#/components/messages/BridgeStatusRequest'
+      resetCommand:
+        $ref: '#/components/messages/ResetCommand'
+      entityIdCommand:
+        $ref: '#/components/messages/EntityIdCommand'
+
+  adminEvents:
+    address: '{uid}/AdminEvents'
+    description: Administrative events published by bridges
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      updateAck:
+        $ref: '#/components/messages/UpdateAck'
+      bridgeInfoResponse:
+        $ref: '#/components/messages/BridgeInfoResponse'
+      bridgeStatusResponse:
+        $ref: '#/components/messages/BridgeStatusResponse'
+
+  # ============================================================================
+  # BRIDGE EVENTS CHANNELS
+  # ============================================================================
+  bridgeEvents:
+    address: '{uid}/BridgeEvents'
+    description: Bridge lifecycle events (HELLO/GOODBYE)
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      helloMessage:
+        $ref: '#/components/messages/HelloMessage'
+      goodbyeMessage:
+        $ref: '#/components/messages/GoodbyeMessage'
+
+  # ============================================================================
+  # DEVICE CHANNELS
+  # ============================================================================
+  deviceOrders:
+    address: '{uid}/DeviceOrders'
+    description: Device management commands sent to bridges
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      addEnoceanNewType:
+        $ref: '#/components/messages/AddEnoceanNewType'
+      addEnoceanExistingType:
+        $ref: '#/components/messages/AddEnoceanExistingType'
+      deleteEnocean:
+        $ref: '#/components/messages/DeleteEnocean'
+      getActuators:
+        $ref: '#/components/messages/GetActuators'
+      getSensors:
+        $ref: '#/components/messages/GetSensors'
+      changeEnoceanZone:
+        $ref: '#/components/messages/ChangeEnoceanZone'
+      addErl:
+        $ref: '#/components/messages/AddErl'
+      deleteErl:
+        $ref: '#/components/messages/DeleteErl'
+      addThermostatProbe:
+        $ref: '#/components/messages/AddThermostatProbe'
+      deleteThermostatProbe:
+        $ref: '#/components/messages/DeleteThermostatProbe'
+      addEnoceanByEep:
+        $ref: '#/components/messages/AddEnoceanByEep'
+
+  deviceEvents:
+    address: '{uid}/DeviceEvents'
+    description: Device events published by bridges
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      deviceAck:
+        $ref: '#/components/messages/DeviceAck'
+      actuatorsResponse:
+        $ref: '#/components/messages/ActuatorsResponse'
+      sensorsResponse:
+        $ref: '#/components/messages/SensorsResponse'
+
+  # ============================================================================
+  # TIME CHANNELS
+  # ============================================================================
+  timeOrders:
+    address: '{uid}/TimeOrders'
+    description: Time synchronization commands sent to bridges
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      timeResponse:
+        $ref: '#/components/messages/TimeResponse'
+
+  timeEvents:
+    address: '{uid}/TimeEvents'
+    description: Time requests published by bridges
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      timeRequest:
+        $ref: '#/components/messages/TimeRequest'
+
+  timeBroadcast:
+    address: 'Time/{timezone}/TimeOrders'
+    description: Time broadcast to all bridges in a timezone
+    parameters:
+      timezone:
+        $ref: '#/components/parameters/timezone'
+    messages:
+      timeBroadcast:
+        $ref: '#/components/messages/TimeBroadcast'
+
+  # ============================================================================
+  # CALENDAR CHANNELS
+  # ============================================================================
+  calendarOrders:
+    address: '{uid}/CalendarOrders'
+    description: Calendar/planning commands sent to bridges
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      sendPlanning:
+        $ref: '#/components/messages/SendPlanning'
+      sendExceptions:
+        $ref: '#/components/messages/SendExceptions'
+      planningGroupEvent:
+        $ref: '#/components/messages/PlanningGroupEvent'
+      planningEvent:
+        $ref: '#/components/messages/PlanningEvent'
+      activateGroup:
+        $ref: '#/components/messages/ActivateGroup'
+      sendDerogation:
+        $ref: '#/components/messages/SendDerogation'
+
+  calendarEvents:
+    address: '{uid}/CalendarEvents'
+    description: Calendar events published by bridges
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      calendarAck:
+        $ref: '#/components/messages/CalendarAck'
+      getPlanningRequest:
+        $ref: '#/components/messages/GetPlanningRequest'
+      getExceptionsRequest:
+        $ref: '#/components/messages/GetExceptionsRequest'
+      deletePlanningRequest:
+        $ref: '#/components/messages/DeletePlanningRequest'
+      deleteExceptionsRequest:
+        $ref: '#/components/messages/DeleteExceptionsRequest'
+      planningResponse:
+        $ref: '#/components/messages/PlanningResponse'
+      exceptionsResponse:
+        $ref: '#/components/messages/ExceptionsResponse'
+
+  # ============================================================================
+  # TELEMETRY CHANNELS
+  # ============================================================================
+  sensorTelemetry:
+    address: '{uid}/{entityId}/SEN/{fact}/{zoneId}/{sensorId}/TelemetryEvents'
+    description: Sensor data telemetry events
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+      entityId:
+        $ref: '#/components/parameters/entityId'
+      fact:
+        $ref: '#/components/parameters/fact'
+      zoneId:
+        $ref: '#/components/parameters/zoneId'
+      sensorId:
+        $ref: '#/components/parameters/sensorId'
+    messages:
+      sensorData:
+        $ref: '#/components/messages/TelemetryData'
+
+  zoneTelemetry:
+    address: '{uid}/{entityId}/FACT/{fact}/{zoneId}/TelemetryEvents'
+    description: Zone data telemetry events
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+      entityId:
+        $ref: '#/components/parameters/entityId'
+      fact:
+        $ref: '#/components/parameters/fact'
+      zoneId:
+        $ref: '#/components/parameters/zoneId'
+    messages:
+      zoneData:
+        $ref: '#/components/messages/TelemetryData'
+
+  actuatorTelemetry:
+    address: '{uid}/{entityId}/ACT/{fact}/{zoneId}/{actuatorId}/TelemetryEvents'
+    description: Actuator state change telemetry events
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+      entityId:
+        $ref: '#/components/parameters/entityId'
+      fact:
+        $ref: '#/components/parameters/fact'
+      zoneId:
+        $ref: '#/components/parameters/zoneId'
+      actuatorId:
+        $ref: '#/components/parameters/actuatorId'
+    messages:
+      actuatorState:
+        $ref: '#/components/messages/TelemetryData'
+
+  targetTelemetry:
+    address: '{uid}/{entityId}/TAR/{fact}/{zoneId}/TelemetryEvents'
+    description: Zone setpoint change telemetry events
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+      entityId:
+        $ref: '#/components/parameters/entityId'
+      fact:
+        $ref: '#/components/parameters/fact'
+      zoneId:
+        $ref: '#/components/parameters/zoneId'
+    messages:
+      targetData:
+        $ref: '#/components/messages/TelemetryData'
+
+  itemStatusTelemetry:
+    address: '{uid}/{entityId}/IT/C_STATE/{itemId}/TelemetryEvents'
+    description: Item status change telemetry events
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+      entityId:
+        $ref: '#/components/parameters/entityId'
+      itemId:
+        $ref: '#/components/parameters/itemId'
+    messages:
+      itemStatus:
+        $ref: '#/components/messages/TelemetryData'
+
+  # ============================================================================
+  # UI CHANNELS
+  # ============================================================================
+  uiOrders:
+    address: '{uid}/UIOrders'
+    description: UI synchronization commands sent to bridges
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      zoneListResponse:
+        $ref: '#/components/messages/ZoneListResponse'
+      buildingNameResponse:
+        $ref: '#/components/messages/BuildingNameResponse'
+      fullUiInfoResponse:
+        $ref: '#/components/messages/FullUiInfoResponse'
+
+  uiEvents:
+    address: '{uid}/UIEvents'
+    description: UI requests published by bridges
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      zoneListRequest:
+        $ref: '#/components/messages/ZoneListRequest'
+      buildingNameRequest:
+        $ref: '#/components/messages/BuildingNameRequest'
+      fullUiInfoRequest:
+        $ref: '#/components/messages/FullUiInfoRequest'
+
+operations:
+  # ============================================================================
+  # ADMIN OPERATIONS
+  # ============================================================================
+  sendAdminCommand:
+    action: send
+    channel:
+      $ref: '#/channels/adminOrders'
+    summary: Send administrative command to a bridge
+    description: |
+      Services publish administrative commands to control bridges including
+      firmware updates, status requests, and reset commands.
+    messages:
+      - $ref: '#/channels/adminOrders/messages/nrfUpdateInit'
+      - $ref: '#/channels/adminOrders/messages/nrfUpdatePacket'
+      - $ref: '#/channels/adminOrders/messages/nrfUpdateEnd'
+      - $ref: '#/channels/adminOrders/messages/esp32UpdateInit'
+      - $ref: '#/channels/adminOrders/messages/esp32UpdatePacket'
+      - $ref: '#/channels/adminOrders/messages/esp32UpdateEnd'
+      - $ref: '#/channels/adminOrders/messages/bridgeInfoRequest'
+      - $ref: '#/channels/adminOrders/messages/bridgeStatusRequest'
+      - $ref: '#/channels/adminOrders/messages/resetCommand'
+      - $ref: '#/channels/adminOrders/messages/entityIdCommand'
+
+  receiveAdminEvent:
+    action: receive
+    channel:
+      $ref: '#/channels/adminEvents'
+    summary: Receive administrative events from bridges
+    description: Services subscribe to receive ACKs and responses to admin commands.
+    messages:
+      - $ref: '#/channels/adminEvents/messages/updateAck'
+      - $ref: '#/channels/adminEvents/messages/bridgeInfoResponse'
+      - $ref: '#/channels/adminEvents/messages/bridgeStatusResponse'
+
+  # ============================================================================
+  # BRIDGE LIFECYCLE OPERATIONS
+  # ============================================================================
+  receiveBridgeLifecycle:
+    action: receive
+    channel:
+      $ref: '#/channels/bridgeEvents'
+    summary: Receive bridge lifecycle events
+    description: |
+      Services subscribe to receive HELLO messages when bridges connect
+      and GOODBYE messages (via LWT) when bridges disconnect.
+    messages:
+      - $ref: '#/channels/bridgeEvents/messages/helloMessage'
+      - $ref: '#/channels/bridgeEvents/messages/goodbyeMessage'
+
+  # ============================================================================
+  # DEVICE OPERATIONS
+  # ============================================================================
+  sendDeviceCommand:
+    action: send
+    channel:
+      $ref: '#/channels/deviceOrders'
+    summary: Send device management command to a bridge
+    description: |
+      Services publish device management commands for adding, removing,
+      and configuring EnOcean devices, ERL devices, and thermostat probes.
+    messages:
+      - $ref: '#/channels/deviceOrders/messages/addEnoceanNewType'
+      - $ref: '#/channels/deviceOrders/messages/addEnoceanExistingType'
+      - $ref: '#/channels/deviceOrders/messages/deleteEnocean'
+      - $ref: '#/channels/deviceOrders/messages/getActuators'
+      - $ref: '#/channels/deviceOrders/messages/getSensors'
+      - $ref: '#/channels/deviceOrders/messages/changeEnoceanZone'
+      - $ref: '#/channels/deviceOrders/messages/addErl'
+      - $ref: '#/channels/deviceOrders/messages/deleteErl'
+      - $ref: '#/channels/deviceOrders/messages/addThermostatProbe'
+      - $ref: '#/channels/deviceOrders/messages/deleteThermostatProbe'
+      - $ref: '#/channels/deviceOrders/messages/addEnoceanByEep'
+
+  receiveDeviceEvent:
+    action: receive
+    channel:
+      $ref: '#/channels/deviceEvents'
+    summary: Receive device events from bridges
+    description: Services subscribe to receive ACKs and device list responses.
+    messages:
+      - $ref: '#/channels/deviceEvents/messages/deviceAck'
+      - $ref: '#/channels/deviceEvents/messages/actuatorsResponse'
+      - $ref: '#/channels/deviceEvents/messages/sensorsResponse'
+
+  # ============================================================================
+  # TIME OPERATIONS
+  # ============================================================================
+  sendTimeResponse:
+    action: send
+    channel:
+      $ref: '#/channels/timeOrders'
+    summary: Send time response to a bridge
+    description: Services respond to time requests with current time and offset.
+    messages:
+      - $ref: '#/channels/timeOrders/messages/timeResponse'
+
+  receiveTimeRequest:
+    action: receive
+    channel:
+      $ref: '#/channels/timeEvents'
+    summary: Receive time request from bridges
+    description: Services subscribe to receive time synchronization requests.
+    messages:
+      - $ref: '#/channels/timeEvents/messages/timeRequest'
+
+  broadcastTime:
+    action: send
+    channel:
+      $ref: '#/channels/timeBroadcast'
+    summary: Broadcast time to all bridges in a timezone
+    description: Services periodically broadcast time to timezone-specific topics.
+    messages:
+      - $ref: '#/channels/timeBroadcast/messages/timeBroadcast'
+
+  # ============================================================================
+  # CALENDAR OPERATIONS
+  # ============================================================================
+  sendCalendarCommand:
+    action: send
+    channel:
+      $ref: '#/channels/calendarOrders'
+    summary: Send calendar/planning command to a bridge
+    description: |
+      Services publish calendar commands for managing temperature schedules,
+      exceptions, planning groups, and derogations.
+    messages:
+      - $ref: '#/channels/calendarOrders/messages/sendPlanning'
+      - $ref: '#/channels/calendarOrders/messages/sendExceptions'
+      - $ref: '#/channels/calendarOrders/messages/planningGroupEvent'
+      - $ref: '#/channels/calendarOrders/messages/planningEvent'
+      - $ref: '#/channels/calendarOrders/messages/activateGroup'
+      - $ref: '#/channels/calendarOrders/messages/sendDerogation'
+
+  receiveCalendarEvent:
+    action: receive
+    channel:
+      $ref: '#/channels/calendarEvents'
+    summary: Receive calendar events from bridges
+    description: Services subscribe to receive calendar-related requests and responses.
+    messages:
+      - $ref: '#/channels/calendarEvents/messages/calendarAck'
+      - $ref: '#/channels/calendarEvents/messages/getPlanningRequest'
+      - $ref: '#/channels/calendarEvents/messages/getExceptionsRequest'
+      - $ref: '#/channels/calendarEvents/messages/deletePlanningRequest'
+      - $ref: '#/channels/calendarEvents/messages/deleteExceptionsRequest'
+      - $ref: '#/channels/calendarEvents/messages/planningResponse'
+      - $ref: '#/channels/calendarEvents/messages/exceptionsResponse'
+
+  # ============================================================================
+  # TELEMETRY OPERATIONS
+  # ============================================================================
+  receiveSensorTelemetry:
+    action: receive
+    channel:
+      $ref: '#/channels/sensorTelemetry'
+    summary: Receive sensor telemetry data
+    description: Services subscribe to receive sensor data from bridges.
+    messages:
+      - $ref: '#/channels/sensorTelemetry/messages/sensorData'
+
+  receiveZoneTelemetry:
+    action: receive
+    channel:
+      $ref: '#/channels/zoneTelemetry'
+    summary: Receive zone telemetry data
+    description: Services subscribe to receive zone-level data from bridges.
+    messages:
+      - $ref: '#/channels/zoneTelemetry/messages/zoneData'
+
+  receiveActuatorTelemetry:
+    action: receive
+    channel:
+      $ref: '#/channels/actuatorTelemetry'
+    summary: Receive actuator state changes
+    description: Services subscribe to receive actuator state change events.
+    messages:
+      - $ref: '#/channels/actuatorTelemetry/messages/actuatorState'
+
+  receiveTargetTelemetry:
+    action: receive
+    channel:
+      $ref: '#/channels/targetTelemetry'
+    summary: Receive zone setpoint changes
+    description: Services subscribe to receive zone setpoint change events.
+    messages:
+      - $ref: '#/channels/targetTelemetry/messages/targetData'
+
+  receiveItemStatusTelemetry:
+    action: receive
+    channel:
+      $ref: '#/channels/itemStatusTelemetry'
+    summary: Receive item status changes
+    description: Services subscribe to receive item status change events.
+    messages:
+      - $ref: '#/channels/itemStatusTelemetry/messages/itemStatus'
+
+  # ============================================================================
+  # UI OPERATIONS
+  # ============================================================================
+  sendUiResponse:
+    action: send
+    channel:
+      $ref: '#/channels/uiOrders'
+    summary: Send UI data to bridges
+    description: Services send zone lists, building names, and UI info to bridges.
+    messages:
+      - $ref: '#/channels/uiOrders/messages/zoneListResponse'
+      - $ref: '#/channels/uiOrders/messages/buildingNameResponse'
+      - $ref: '#/channels/uiOrders/messages/fullUiInfoResponse'
+
+  receiveUiRequest:
+    action: receive
+    channel:
+      $ref: '#/channels/uiEvents'
+    summary: Receive UI requests from bridges
+    description: Services subscribe to receive UI data requests from bridges.
+    messages:
+      - $ref: '#/channels/uiEvents/messages/zoneListRequest'
+      - $ref: '#/channels/uiEvents/messages/buildingNameRequest'
+      - $ref: '#/channels/uiEvents/messages/fullUiInfoRequest'
+
+components:
+  # ============================================================================
+  # PARAMETERS
+  # ============================================================================
+  parameters:
+    uid:
+      description: Unique identifier of the bridge
+      schema:
+        type: string
+        example: "BRIDGE001"
+    entityId:
+      description: Unique identifier of the entity
+      schema:
+        type: string
+        example: "ENTITY001"
+    timezone:
+      description: IANA timezone name
+      schema:
+        type: string
+        example: "Europe/Paris"
+    fact:
+      description: Data factor identifier
+      schema:
+        type: string
+        example: "temperature"
+    zoneId:
+      description: Zone identifier
+      schema:
+        type: string
+        example: "zone1"
+    sensorId:
+      description: Sensor identifier
+      schema:
+        type: string
+        example: "sensor001"
+    actuatorId:
+      description: Actuator identifier
+      schema:
+        type: string
+        example: "actuator001"
+    itemId:
+      description: Item identifier
+      schema:
+        type: string
+        example: "item001"
+
+  # ============================================================================
+  # SECURITY SCHEMES
+  # ============================================================================
+  securitySchemes:
+    userPassword:
+      type: userPassword
+      description: Username and password authentication
+    X509:
+      type: X509
+      description: TLS client certificate authentication
+
+  # ============================================================================
+  # MESSAGES
+  # ============================================================================
+  messages:
+    # --------------------------------------------------------------------------
+    # ADMIN MESSAGES
+    # --------------------------------------------------------------------------
+    NrfUpdateInit:
+      name: NRF Update Init
+      title: Initialize NRF firmware update
+      summary: Start firmware update sequence for NRF chip (NRF52/NRF53)
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/UpdateInitPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x00'
+      x-opencaps-op: '0x01'
+
+    NrfUpdatePacket:
+      name: NRF Update Packet
+      title: Send NRF firmware packet
+      summary: Send a 512-byte firmware chunk for NRF chip (NRF52/NRF53)
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/UpdatePacketPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x01'
+      x-opencaps-op: '0x01'
+
+    NrfUpdateEnd:
+      name: NRF Update End
+      title: End NRF firmware update
+      summary: Signal end of NRF firmware update sequence (NRF52/NRF53)
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/EmptyPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x02'
+      x-opencaps-op: '0x01'
+
+    Esp32UpdateInit:
+      name: ESP32 Update Init
+      title: Initialize ESP32-S3 firmware update
+      summary: Start firmware update sequence for ESP32-S3 chip
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/UpdateInitPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x08'
+      x-opencaps-op: '0x01'
+
+    Esp32UpdatePacket:
+      name: ESP32 Update Packet
+      title: Send ESP32-S3 firmware packet
+      summary: Send a 512-byte firmware chunk for ESP32-S3
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/UpdatePacketPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x09'
+      x-opencaps-op: '0x01'
+
+    Esp32UpdateEnd:
+      name: ESP32 Update End
+      title: End ESP32-S3 firmware update
+      summary: Signal end of ESP32-S3 firmware update with SHA256 verification
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/Esp32UpdateEndPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x0A'
+      x-opencaps-op: '0x01'
+
+    BridgeInfoRequest:
+      name: Bridge Info Request
+      title: Request bridge information
+      summary: Request product name, versions, and firmware info
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/EmptyPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x03'
+      x-opencaps-op: '0x04'
+
+    BridgeInfoResponse:
+      name: Bridge Info Response
+      title: Bridge information response
+      summary: Response containing bridge product and firmware info as JSON
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/BridgeInfoPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x03'
+      x-opencaps-op: '0x05'
+
+    BridgeStatusRequest:
+      name: Bridge Status Request
+      title: Request bridge status
+      summary: Request current status of the bridge
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/EmptyPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x04'
+      x-opencaps-op: '0x04'
+
+    BridgeStatusResponse:
+      name: Bridge Status Response
+      title: Bridge status response
+      summary: Response containing bridge status code
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/StatusCodePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x04'
+      x-opencaps-op: '0x05'
+
+    ResetCommand:
+      name: Reset Command
+      title: Reset the NRF chip
+      summary: Send reset command to reboot the NRF chip (NRF52/NRF53)
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/EmptyPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x05'
+      x-opencaps-op: '0x02'
+
+    EntityIdCommand:
+      name: Entity ID Command
+      title: Set entity ID
+      summary: Send entity ID to the bridge
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/EntityIdPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x11'
+      x-opencaps-op: '0x01'
+
+    UpdateAck:
+      name: Update ACK
+      title: Firmware update acknowledgment
+      summary: ACK message for firmware update operations
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/AckPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-op: '0x03'
+
+    # --------------------------------------------------------------------------
+    # BRIDGE LIFECYCLE MESSAGES
+    # --------------------------------------------------------------------------
+    HelloMessage:
+      name: Hello Message
+      title: Bridge connection announcement
+      summary: Published when a bridge connects to the MQTT broker
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/StatusCodePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x04'
+      x-opencaps-op: '0x05'
+
+    GoodbyeMessage:
+      name: Goodbye Message
+      title: Bridge disconnection notification
+      summary: Published via LWT when a bridge disconnects from the broker
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/StatusCodePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+          retain: true
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x04'
+      x-opencaps-op: '0x05'
+
+    # --------------------------------------------------------------------------
+    # DEVICE MESSAGES
+    # --------------------------------------------------------------------------
+    AddEnoceanNewType:
+      name: Add EnOcean New Type
+      title: Add new EnOcean device with new type
+      summary: Add a new EnOcean device with a translation formula
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/AddEnoceanNewTypePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x00'
+      x-opencaps-op: '0x01'
+
+    AddEnoceanExistingType:
+      name: Add EnOcean Existing Type
+      title: Add new EnOcean device with existing type
+      summary: Add a new EnOcean device referencing an existing device type
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/AddEnoceanExistingTypePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x01'
+      x-opencaps-op: '0x01'
+
+    DeleteEnocean:
+      name: Delete EnOcean
+      title: Delete EnOcean device
+      summary: Remove an EnOcean device from the bridge
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/DeleteEnoceanPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x02'
+      x-opencaps-op: '0x01'
+
+    GetActuators:
+      name: Get Actuators
+      title: Request actuator list
+      summary: Request list of all actuators from the bridge
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/EmptyPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x03'
+      x-opencaps-op: '0x04'
+
+    GetSensors:
+      name: Get Sensors
+      title: Request sensor list
+      summary: Request list of all sensors from the bridge
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/EmptyPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x04'
+      x-opencaps-op: '0x04'
+
+    ChangeEnoceanZone:
+      name: Change EnOcean Zone
+      title: Change EnOcean device zone
+      summary: Move an EnOcean device to a different zone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/ChangeZonePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x05'
+      x-opencaps-op: '0x01'
+
+    AddErl:
+      name: Add ERL
+      title: Add ERL device
+      summary: Add a new ERL device with Thread network credentials
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/AddErlPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x06'
+      x-opencaps-op: '0x01'
+
+    DeleteErl:
+      name: Delete ERL
+      title: Delete ERL device
+      summary: Remove an ERL device from the bridge
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/EmptyPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x07'
+      x-opencaps-op: '0x01'
+
+    AddThermostatProbe:
+      name: Add Thermostat Probe
+      title: Add thermostat probe
+      summary: Add a new thermostat probe to a zone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/ZonePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x08'
+      x-opencaps-op: '0x01'
+
+    DeleteThermostatProbe:
+      name: Delete Thermostat Probe
+      title: Delete thermostat probe
+      summary: Remove a thermostat probe from a zone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/ZonePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x09'
+      x-opencaps-op: '0x01'
+
+    AddEnoceanByEep:
+      name: Add EnOcean by EEP
+      title: Add EnOcean device by EEP profile
+      summary: Add a new EnOcean device using its EEP profile string
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/AddEnoceanByEepPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x09'
+      x-opencaps-op: '0x01'
+
+    DeviceAck:
+      name: Device ACK
+      title: Device operation acknowledgment
+      summary: ACK message for device operations
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/AckPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-op: '0x03'
+
+    ActuatorsResponse:
+      name: Actuators Response
+      title: Actuator list response
+      summary: Response containing list of actuators
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/DeviceListPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x03'
+      x-opencaps-op: '0x05'
+
+    SensorsResponse:
+      name: Sensors Response
+      title: Sensor list response
+      summary: Response containing list of sensors
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/DeviceListPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x04'
+      x-opencaps-op: '0x05'
+
+    # --------------------------------------------------------------------------
+    # TIME MESSAGES
+    # --------------------------------------------------------------------------
+    TimeRequest:
+      name: Time Request
+      title: Request current time
+      summary: Bridge requests current time for a specific timezone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/TimezonePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x00'
+      x-opencaps-op: '0x04'
+
+    TimeResponse:
+      name: Time Response
+      title: Time response
+      summary: Response containing current time and timezone offset
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/TimePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x00'
+      x-opencaps-op: '0x05'
+
+    TimeBroadcast:
+      name: Time Broadcast
+      title: Time broadcast
+      summary: Periodic time broadcast to all bridges in a timezone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/TimePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 0
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x02'
+      x-opencaps-op: '0x03'
+
+    # --------------------------------------------------------------------------
+    # CALENDAR MESSAGES
+    # --------------------------------------------------------------------------
+    SendPlanning:
+      name: Send Planning
+      title: Send temperature planning
+      summary: Send temperature schedule for a zone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/PlanningPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x00'
+      x-opencaps-op: '0x01'
+
+    SendExceptions:
+      name: Send Exceptions
+      title: Send temperature exceptions
+      summary: Send temperature exceptions for a zone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/ExceptionsPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x01'
+      x-opencaps-op: '0x01'
+
+    GetPlanningRequest:
+      name: Get Planning Request
+      title: Request zone planning
+      summary: Request temperature planning for a zone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/ZonePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x02'
+      x-opencaps-op: '0x04'
+
+    GetExceptionsRequest:
+      name: Get Exceptions Request
+      title: Request zone exceptions
+      summary: Request temperature exceptions for a zone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/ZonePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x03'
+      x-opencaps-op: '0x04'
+
+    DeletePlanningRequest:
+      name: Delete Planning Request
+      title: Delete zone planning
+      summary: Delete temperature planning and exceptions for a zone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/ZonePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x04'
+      x-opencaps-op: '0x04'
+
+    DeleteExceptionsRequest:
+      name: Delete Exceptions Request
+      title: Delete zone exceptions
+      summary: Delete temperature exceptions for a zone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/ZonePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x05'
+      x-opencaps-op: '0x04'
+
+    PlanningResponse:
+      name: Planning Response
+      title: Planning response
+      summary: Response containing zone temperature planning
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/PlanningPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x02'
+      x-opencaps-op: '0x05'
+
+    ExceptionsResponse:
+      name: Exceptions Response
+      title: Exceptions response
+      summary: Response containing zone temperature exceptions
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/ExceptionsPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x03'
+      x-opencaps-op: '0x05'
+
+    CalendarAck:
+      name: Calendar ACK
+      title: Calendar operation acknowledgment
+      summary: ACK message for calendar operations
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/AckPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-op: '0x03'
+
+    PlanningGroupEvent:
+      name: Planning Group Event
+      title: Planning group event
+      summary: Create, modify, or delete a planning group
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/PlanningGroupPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x06'
+      x-opencaps-op: '0x01'
+
+    PlanningEvent:
+      name: Planning Event
+      title: Planning event
+      summary: Create, modify, or delete a planning
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/PlanningEventPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x07'
+      x-opencaps-op: '0x01'
+
+    ActivateGroup:
+      name: Activate Group
+      title: Activate planning group
+      summary: Activate a planning group from UI
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/GroupIdPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x08'
+      x-opencaps-op: '0x05'
+
+    SendDerogation:
+      name: Send Derogation
+      title: Send derogation event
+      summary: Send a temperature derogation for a zone
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/DerogationPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x03'
+      x-opencaps-op: '0x05'
+
+    # --------------------------------------------------------------------------
+    # TELEMETRY MESSAGES
+    # --------------------------------------------------------------------------
+    TelemetryData:
+      name: Telemetry Data
+      title: Telemetry data event
+      summary: Telemetry data from sensors, actuators, or zones
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/TelemetryPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 0
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x00'
+      x-opencaps-op: '0x02'
+
+    # --------------------------------------------------------------------------
+    # UI MESSAGES
+    # --------------------------------------------------------------------------
+    ZoneListRequest:
+      name: Zone List Request
+      title: Request zone list
+      summary: Bridge requests list of zones for a building
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/BuildingIdPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x00'
+      x-opencaps-op: '0x04'
+
+    ZoneListResponse:
+      name: Zone List Response
+      title: Zone list response
+      summary: Response containing list of zones
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/ZoneListPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x00'
+      x-opencaps-op: '0x05'
+
+    BuildingNameRequest:
+      name: Building Name Request
+      title: Request building name
+      summary: Bridge requests building name
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/BuildingIdPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x01'
+      x-opencaps-op: '0x04'
+
+    BuildingNameResponse:
+      name: Building Name Response
+      title: Building name response
+      summary: Response containing building name
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/BuildingNamePayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x01'
+      x-opencaps-op: '0x05'
+
+    FullUiInfoRequest:
+      name: Full UI Info Request
+      title: Request full UI information
+      summary: Bridge requests building name and zone list
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/BuildingIdPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x02'
+      x-opencaps-op: '0x04'
+
+    FullUiInfoResponse:
+      name: Full UI Info Response
+      title: Full UI information response
+      summary: Response containing building name and zone list
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/FullUiInfoPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      bindings:
+        mqtt:
+          qos: 1
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x02'
+      x-opencaps-op: '0x05'
+
+  # ============================================================================
+  # MESSAGE TRAITS
+  # ============================================================================
+  messageTraits:
+    commonMessage:
+      headers:
+        type: object
+        properties:
+          magic:
+            type: integer
+            format: uint32
+            const: 0x42524144
+            description: Magic number identifying valid OpenCaps messages
+          seq:
+            type: integer
+            format: uint16
+            description: Sequence number for message ordering
+          op:
+            type: integer
+            format: uint8
+            description: Operation type
+            enum: [0x01, 0x02, 0x03, 0x04, 0x05]
+          type:
+            type: integer
+            format: uint8
+            description: Method type code
+          length:
+            type: integer
+            format: uint16
+            description: Body length in bytes
+
+  # ============================================================================
+  # SCHEMAS
+  # ============================================================================
+  schemas:
+    # --------------------------------------------------------------------------
+    # COMMON SCHEMAS
+    # --------------------------------------------------------------------------
+    MessageHeader:
+      type: object
+      description: |
+        Standard message header (10 bytes total).
+        All multi-byte values are big-endian.
+      properties:
+        magic:
+          type: integer
+          format: uint32
+          const: 0x42524144
+          description: Magic number "BRAD" (0x42524144)
+        seq:
+          type: integer
+          format: uint16
+          minimum: 0
+          maximum: 65535
+          description: Sequence number for tracking message order
+        op:
+          $ref: '#/components/schemas/OperationType'
+        type:
+          type: integer
+          format: uint8
+          description: Method type code
+        length:
+          type: integer
+          format: uint16
+          minimum: 0
+          maximum: 65535
+          description: Length of the body in bytes
+
+    OperationType:
+      type: integer
+      format: uint8
+      description: Operation type code
+      enum:
+        - 0x01  # REQACK - Request requiring ACK
+        - 0x02  # NOACK - No ACK required
+        - 0x03  # ISACK - Is an ACK message
+        - 0x04  # REQRESP - Request requiring response
+        - 0x05  # ISRESP - Is a response message
+      x-enum-descriptions:
+        - REQACK: Message requires acknowledgment
+        - NOACK: Message does not require acknowledgment
+        - ISACK: Message is an acknowledgment
+        - REQRESP: Message requires a response
+        - ISRESP: Message is a response
+
+    AckPayload:
+      type: object
+      description: Standard acknowledgment payload
+      properties:
+        returnCode:
+          $ref: '#/components/schemas/ReturnCode'
+
+    ReturnCode:
+      type: integer
+      format: uint8
+      description: Return code for ACK messages
+      enum:
+        - 0x00  # No error
+        - 0x01  # CRC/magic error
+        - 0x02  # Critical error
+      x-enum-descriptions:
+        - NO_ERROR: Operation completed successfully
+        - CRC_ERROR: CRC or magic number validation failed
+        - CRITICAL_ERROR: Critical error occurred
+
+    StatusCodePayload:
+      type: object
+      description: Status code payload
+      properties:
+        status:
+          type: integer
+          format: uint8
+          description: Status code (0x00 = OK)
+
+    EmptyPayload:
+      type: object
+      description: Empty payload (no body)
+      properties: {}
+
+    DeviceClass:
+      type: integer
+      format: uint8
+      description: Device class identifier
+      enum:
+        - 0x00  # Relay actuator ON/OFF
+        - 0x01  # Pilot wire relay ON/OFF
+        - 0x02  # Pilot wire relay PLANNING
+        - 0x80  # Temperature sensor
+        - 0x81  # Reserved
+      x-enum-descriptions:
+        - ACTUATOR_RELAY_ONOFF: Relay actuator with ON/OFF control
+        - ACTUATOR_PILOT_WIRE_ONOFF: Pilot wire relay with ON/OFF control
+        - ACTUATOR_PILOT_WIRE_PLANNING: Pilot wire relay with planning mode
+        - SENSOR_TEMPERATURE: Temperature sensor
+        - RESERVED: Reserved for future use
+
+    # --------------------------------------------------------------------------
+    # ADMIN SCHEMAS
+    # --------------------------------------------------------------------------
+    UpdateInitPayload:
+      type: object
+      description: Firmware update initialization payload
+      properties:
+        binaryLength:
+          type: integer
+          format: uint32
+          description: Total size of the firmware binary in bytes
+
+    UpdatePacketPayload:
+      type: object
+      description: Firmware update packet payload
+      properties:
+        data:
+          type: string
+          format: binary
+          maxLength: 512
+          description: Firmware data chunk (max 512 bytes)
+
+    Esp32UpdateEndPayload:
+      type: object
+      description: ESP32 firmware update end payload with SHA256 hash
+      properties:
+        sha256:
+          type: string
+          format: binary
+          minLength: 64
+          maxLength: 64
+          description: SHA256 hash of the firmware binary (64 bytes)
+
+    BridgeInfoPayload:
+      type: object
+      description: Bridge information response (JSON in body)
+      properties:
+        product_name:
+          type: string
+          description: Product name
+        product_rev:
+          type: string
+          description: Hardware revision
+        firmware_app_version:
+          type: string
+          description: Application firmware version
+        firmware_type:
+          type: string
+          description: Firmware type
+        firmware_bootloader_version:
+          type: string
+          description: Bootloader version
+
+    EntityIdPayload:
+      type: object
+      description: Entity ID payload
+      properties:
+        entityId:
+          type: string
+          description: Entity ID as ASCII string
+
+    # --------------------------------------------------------------------------
+    # DEVICE SCHEMAS
+    # --------------------------------------------------------------------------
+    AddEnoceanNewTypePayload:
+      type: object
+      description: Add EnOcean device with new type
+      properties:
+        class:
+          $ref: '#/components/schemas/DeviceClass'
+        id:
+          type: integer
+          format: uint32
+          description: EnOcean device ID (4 bytes)
+        zoneLength:
+          type: integer
+          format: uint8
+          description: Length of zone ID string
+        zone:
+          type: string
+          description: Zone ID as ASCII string
+        translationFormula:
+          type: string
+          format: binary
+          description: Translation formula for the device type
+
+    AddEnoceanExistingTypePayload:
+      type: object
+      description: Add EnOcean device with existing type
+      properties:
+        class:
+          $ref: '#/components/schemas/DeviceClass'
+        id:
+          type: integer
+          format: uint32
+          description: EnOcean device ID (4 bytes)
+        zoneLength:
+          type: integer
+          format: uint8
+          description: Length of zone ID string
+        zone:
+          type: string
+          description: Zone ID as ASCII string
+        existingId:
+          type: integer
+          format: uint32
+          description: ID of existing device with same type
+
+    DeleteEnoceanPayload:
+      type: object
+      description: Delete EnOcean device payload
+      properties:
+        class:
+          $ref: '#/components/schemas/DeviceClass'
+        id:
+          type: integer
+          format: uint32
+          description: EnOcean device ID (4 bytes)
+        zoneLength:
+          type: integer
+          format: uint8
+          description: Length of zone ID string
+        zone:
+          type: string
+          description: Zone ID as ASCII string
+
+    ChangeZonePayload:
+      type: object
+      description: Change device zone payload
+      properties:
+        class:
+          $ref: '#/components/schemas/DeviceClass'
+        id:
+          type: integer
+          format: uint32
+          description: EnOcean device ID (4 bytes)
+        oldZoneLength:
+          type: integer
+          format: uint8
+          description: Length of old zone ID string
+        oldZone:
+          type: string
+          description: Old zone ID as ASCII string
+        newZoneLength:
+          type: integer
+          format: uint8
+          description: Length of new zone ID string
+        newZone:
+          type: string
+          description: New zone ID as ASCII string
+
+    AddErlPayload:
+      type: object
+      description: Add ERL device payload
+      properties:
+        comId:
+          type: string
+          format: binary
+          minLength: 16
+          maxLength: 16
+          description: ERL MAC EUI64 (16 bytes)
+        secretKey:
+          type: string
+          format: binary
+          minLength: 32
+          maxLength: 32
+          description: Thread network secret key (32 bytes)
+
+    AddEnoceanByEepPayload:
+      type: object
+      description: Add EnOcean device by EEP profile
+      properties:
+        class:
+          $ref: '#/components/schemas/DeviceClass'
+        id:
+          type: integer
+          format: uint32
+          description: EnOcean device ID (4 bytes)
+        zoneLength:
+          type: integer
+          format: uint8
+          description: Length of zone ID string
+        zone:
+          type: string
+          description: Zone ID as ASCII string
+        eep:
+          type: string
+          pattern: '^[A-F0-9]{2}-[A-F0-9]{2}-[A-F0-9]{2}$'
+          description: EnOcean Equipment Profile (e.g., "A5-09-0C")
+          example: "A5-09-0C"
+
+    ZonePayload:
+      type: object
+      description: Zone identifier payload
+      properties:
+        zoneLength:
+          type: integer
+          format: uint8
+          description: Length of zone ID string
+        zone:
+          type: string
+          description: Zone ID as ASCII string
+
+    DeviceListPayload:
+      type: object
+      description: Device list response payload
+      properties:
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceInfo'
+
+    DeviceInfo:
+      type: object
+      description: Device information
+      properties:
+        itemId:
+          type: integer
+          format: uint32
+          description: Device item ID
+        tfType:
+          type: integer
+          format: uint8
+          description: Translation formula type
+        class:
+          $ref: '#/components/schemas/DeviceClass'
+        zoneCount:
+          type: integer
+          format: uint8
+          description: Number of zones
+        zones:
+          type: array
+          items:
+            type: object
+            properties:
+              zoneLength:
+                type: integer
+                format: uint8
+              zone:
+                type: string
+
+    # --------------------------------------------------------------------------
+    # TIME SCHEMAS
+    # --------------------------------------------------------------------------
+    TimezonePayload:
+      type: object
+      description: Timezone request payload
+      properties:
+        timezone:
+          type: string
+          description: IANA timezone name (e.g., "Europe/Paris")
+          example: "Europe/Paris"
+
+    TimePayload:
+      type: object
+      description: Time response payload
+      properties:
+        offset:
+          type: integer
+          format: int32
+          description: UTC offset in seconds
+        timestamp:
+          type: integer
+          format: uint32
+          description: Unix timestamp
+
+    # --------------------------------------------------------------------------
+    # CALENDAR SCHEMAS
+    # --------------------------------------------------------------------------
+    PlanningPayload:
+      type: object
+      description: Temperature planning payload
+      properties:
+        zoneIdLength:
+          type: integer
+          format: uint8
+          description: Length of zone ID string
+        zoneId:
+          type: string
+          description: Zone ID as ASCII string
+        mode:
+          type: integer
+          format: uint8
+          description: Operating mode (0x00 = ON/OFF, 0x01 = pilot wire)
+          enum: [0x00, 0x01]
+        pointCount:
+          type: integer
+          format: uint8
+          description: Number of schedule points for the day
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchedulePoint'
+
+    SchedulePoint:
+      type: object
+      description: Schedule point for temperature planning
+      properties:
+        time:
+          type: integer
+          format: uint8
+          description: Time in minutes divided by 10 (e.g., 60 = 10:00)
+        setpoint:
+          type: integer
+          format: uint8
+          description: |
+            For ON/OFF mode: Temperature in Celsius * 2 (e.g., 42 = 21°C)
+            For pilot wire mode: Pilot wire mode code
+
+    ExceptionsPayload:
+      type: object
+      description: Temperature exceptions payload
+      properties:
+        zoneIdLength:
+          type: integer
+          format: uint8
+          description: Length of zone ID string
+        zoneId:
+          type: string
+          description: Zone ID as ASCII string
+        mode:
+          type: integer
+          format: uint8
+          description: Operating mode (0x00 = ON/OFF, 0x01 = pilot wire)
+        exceptionCount:
+          type: integer
+          format: uint8
+          description: Number of exceptions
+        exceptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Exception'
+
+    Exception:
+      type: object
+      description: Temperature exception period
+      properties:
+        start:
+          type: integer
+          format: uint64
+          description: Start Unix timestamp (8 bytes)
+        end:
+          type: integer
+          format: uint64
+          description: End Unix timestamp (8 bytes)
+        setpoint:
+          type: integer
+          format: uint8
+          description: Temperature setpoint (Celsius * 2)
+
+    PlanningGroupPayload:
+      type: object
+      description: Planning group event payload
+      properties:
+        eventOp:
+          type: integer
+          format: uint8
+          description: Event operation (0x00 = create, 0x01 = modify, 0x02 = delete)
+          enum: [0x00, 0x01, 0x02]
+        groupIdLength:
+          type: integer
+          format: uint8
+          description: Length of group ID string
+        groupId:
+          type: string
+          description: Group ID as ASCII string
+        groupName:
+          type: string
+          description: Group name as ASCII string
+        groupActivated:
+          type: integer
+          format: uint8
+          description: Group activation status (0x00 = disabled, 0x01 = enabled)
+
+    PlanningEventPayload:
+      type: object
+      description: Planning event payload
+      properties:
+        eventOp:
+          type: integer
+          format: uint8
+          description: Event operation (0x00 = create, 0x01 = modify, 0x02 = delete)
+          enum: [0x00, 0x01, 0x02]
+        groupIdLength:
+          type: integer
+          format: uint8
+          description: Length of group ID string
+        groupId:
+          type: string
+          description: Group ID as ASCII string
+        planningIdLength:
+          type: integer
+          format: uint8
+          description: Length of planning ID string
+        planningId:
+          type: string
+          description: Planning ID as ASCII string
+        zoneId:
+          type: string
+          description: Zone ID as ASCII string
+        factor:
+          type: integer
+          format: uint8
+          description: Planning factor
+
+    GroupIdPayload:
+      type: object
+      description: Group ID payload for activation
+      properties:
+        groupId:
+          type: string
+          description: Group ID to activate
+
+    DerogationPayload:
+      type: object
+      description: Temperature derogation payload
+      properties:
+        zoneIdLength:
+          type: integer
+          format: uint8
+        zoneId:
+          type: string
+        mode:
+          type: integer
+          format: uint8
+        exceptionCount:
+          type: integer
+          format: uint8
+          const: 1
+        start:
+          type: integer
+          format: uint64
+        end:
+          type: integer
+          format: uint64
+        setpoint:
+          type: integer
+          format: uint8
+
+    # --------------------------------------------------------------------------
+    # TELEMETRY SCHEMAS
+    # --------------------------------------------------------------------------
+    TelemetryPayload:
+      type: object
+      description: Telemetry data payload
+      properties:
+        timestamp:
+          type: integer
+          format: uint64
+          description: Unix timestamp (8 bytes)
+        dataType:
+          type: integer
+          format: uint8
+          description: Data type (0 = Float64, 1 = String)
+          enum: [0, 1]
+        data:
+          type: string
+          description: Data value as string representation
+
+    # --------------------------------------------------------------------------
+    # UI SCHEMAS
+    # --------------------------------------------------------------------------
+    BuildingIdPayload:
+      type: object
+      description: Building ID payload
+      properties:
+        buildingId:
+          type: string
+          description: Building ID as ASCII string
+
+    BuildingNamePayload:
+      type: object
+      description: Building name payload
+      properties:
+        buildingName:
+          type: string
+          description: Building name as ASCII string
+
+    ZoneListPayload:
+      type: object
+      description: Zone list payload
+      properties:
+        zones:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZoneInfo'
+
+    ZoneInfo:
+      type: object
+      description: Zone information
+      properties:
+        idLength:
+          type: integer
+          format: uint8
+          description: Length of zone ID
+        id:
+          type: string
+          description: Zone ID as ASCII string
+        typeLength:
+          type: integer
+          format: uint8
+          description: Length of zone type
+        type:
+          type: string
+          description: Zone type (e.g., "heating", "cooling")
+        nameLength:
+          type: integer
+          format: uint8
+          description: Length of zone name
+        name:
+          type: string
+          description: Zone display name
+
+    FullUiInfoPayload:
+      type: object
+      description: Full UI information payload
+      properties:
+        buildingNameLength:
+          type: integer
+          format: uint8
+          description: Length of building name
+        buildingName:
+          type: string
+          description: Building name as ASCII string
+        zones:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZoneInfo'

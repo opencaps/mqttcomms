@@ -1,5 +1,9 @@
 # MqttComms: MQTT Protocol Handling for Opencaps Devices
 
+[![AsyncAPI](https://img.shields.io/badge/AsyncAPI-3.0.0-blue.svg)](https://studio.asyncapi.com/?url=https://raw.githubusercontent.com/opencaps/mqttcomms/main/asyncapi.yaml)
+[![AsyncAPI Docs](https://img.shields.io/badge/API%20Docs-View%20Online-green.svg)](https://opencaps.github.io/mqttcomms/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 ## Overview
 
 MqttComms is a Go library designed to facilitate seamless communication between Opencaps devices and services using the MQTT protocol. It provides robust tools for encoding and decoding custom protocol messages, secure communication using TLS, and managing MQTT topics and methods.
@@ -14,6 +18,32 @@ MqttComms is a Go library designed to facilitate seamless communication between 
 - **Custom Protocol Support**: Encode and decode messages with CRC validation.
 - **Signal-Based Reconnection**: Reconnects on receiving `SIGHUP` signals.
 - **Flexible Configuration**: Supports file-based or inline credentials.
+- **AsyncAPI Specification**: Complete API documentation in AsyncAPI 3.0 format.
+
+---
+
+## API Documentation
+
+The MQTT API is fully documented using the [AsyncAPI](https://www.asyncapi.com/) specification.
+
+### View Documentation
+
+- **Interactive Studio**: [Open in AsyncAPI Studio](https://studio.asyncapi.com/?url=https://raw.githubusercontent.com/opencaps/mqttcomms/main/asyncapi.yaml)
+- **HTML Documentation**: [View Online](https://opencaps.github.io/mqttcomms/) (hosted via GitHub Pages)
+- **Raw Specification**: [asyncapi.yaml](asyncapi.yaml)
+
+### Generate Documentation Locally
+
+```bash
+# Install AsyncAPI CLI
+npm install -g @asyncapi/cli
+
+# Generate HTML documentation
+asyncapi generate fromTemplate asyncapi.yaml @asyncapi/html-template -o docs
+
+# Or use the provided script
+./scripts/generate-docs.sh
+```
 
 ---
 

@@ -50,5 +50,7 @@ const (
 	TELEMETRY = 0x00
 
 	// UI methods
-	UI_SEND_ZONE_LIST = 0x00
+	UI_ZONE_LIST      = 0x00
+	UI_BUILDING_NAME  = 0x01
+	UI_FULL_INFO      = 0x02
 )
