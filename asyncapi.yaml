@@ -326,6 +326,8 @@ channels:
         $ref: '#/components/messages/BuildingNameResponse'
       fullUiInfoResponse:
         $ref: '#/components/messages/FullUiInfoResponse'
+      weatherResponse:
+        $ref: '#/components/messages/WeatherResponse'
 
   uiEvents:
     address: '{uid}/UIEvents'
@@ -340,6 +342,8 @@ channels:
         $ref: '#/components/messages/BuildingNameRequest'
       fullUiInfoRequest:
         $ref: '#/components/messages/FullUiInfoRequest'
+      weatherRequest:
+        $ref: '#/components/messages/WeatherRequest'
 
 operations:
   # ============================================================================
@@ -546,11 +550,12 @@ operations:
     channel:
       $ref: '#/channels/uiOrders'
     summary: Send UI data to bridges
-    description: Services send zone lists, building names, and UI info to bridges.
+    description: Services send zone lists, building names, weather, and UI info to bridges.
     messages:
       - $ref: '#/channels/uiOrders/messages/zoneListResponse'
       - $ref: '#/channels/uiOrders/messages/buildingNameResponse'
       - $ref: '#/channels/uiOrders/messages/fullUiInfoResponse'
+      - $ref: '#/channels/uiOrders/messages/weatherResponse'
 
   receiveUiRequest:
     action: receive
@@ -562,6 +567,7 @@ operations:
       - $ref: '#/channels/uiEvents/messages/zoneListRequest'
       - $ref: '#/channels/uiEvents/messages/buildingNameRequest'
       - $ref: '#/channels/uiEvents/messages/fullUiInfoRequest'
+      - $ref: '#/channels/uiEvents/messages/weatherRequest'
 
 components:
   # ============================================================================
@@ -1346,6 +1352,34 @@ components:
       x-opencaps-type: '0x02'
       x-opencaps-op: '0x05'
 
+    WeatherRequest:
+      name: Weather Request
+      title: Request weather data
+      summary: Bridge requests weather data for a building
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/BuildingIdPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x03'
+      x-opencaps-op: '0x04'
+
+    WeatherResponse:
+      name: Weather Response
+      title: Weather data response
+      summary: Response containing weather data (temperature, humidity, icon)
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/WeatherPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x03'
+      x-opencaps-op: '0x05'
+
   # ============================================================================
   # MESSAGE TRAITS
   # ============================================================================
@@ -2010,3 +2044,26 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ZoneInfo'
+
+    WeatherPayload:
+      type: object
+      description: |
+        Weather data payload (8 bytes total, raw data without length prefixes).
+        Binary layout: [temperature: 4 bytes float32] [humidity: 1 byte uint8] [iconCode: 3 bytes ASCII]
+      properties:
+        temperature:
+          type: number
+          format: float
+          description: Temperature in Celsius (4 bytes, IEEE 754 float32)
+        humidity:
+          type: integer
+          format: uint8
+          minimum: 0
+          maximum: 100
+          description: Relative humidity percentage (1 byte)
+        iconCode:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Weather icon code (3 bytes ASCII, e.g., "01d", "10n")
+          example: "01d"
