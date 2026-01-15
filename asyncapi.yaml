@@ -2031,8 +2031,25 @@ components:
 
     FullUiInfoPayload:
       type: object
-      description: Full UI information payload
+      description: |
+        Full UI information payload.
+        Binary layout: [weather: 8 bytes] [buildingNameLength: 1 byte] [buildingName: N bytes] [zones...]
       properties:
+        temperature:
+          type: number
+          format: float
+          description: Temperature in Celsius (4 bytes, IEEE 754 float32)
+        humidity:
+          type: integer
+          format: uint8
+          minimum: 0
+          maximum: 100
+          description: Relative humidity percentage (1 byte)
+        iconCode:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Weather icon code (3 bytes ASCII, e.g., "01d", "10n")
         buildingNameLength:
           type: integer
           format: uint8
