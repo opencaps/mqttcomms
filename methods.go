@@ -54,4 +54,5 @@ const (
 	UI_BUILDING_NAME  = 0x01
 	UI_FULL_INFO      = 0x02
 	UI_WEATHER        = 0x03
+	UI_SUN_TIMES      = 0x04
 )

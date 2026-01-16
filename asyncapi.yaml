@@ -328,6 +328,8 @@ channels:
         $ref: '#/components/messages/FullUiInfoResponse'
       weatherResponse:
         $ref: '#/components/messages/WeatherResponse'
+      sunTimesResponse:
+        $ref: '#/components/messages/SunTimesResponse'
 
   uiEvents:
     address: '{uid}/UIEvents'
@@ -344,6 +346,8 @@ channels:
         $ref: '#/components/messages/FullUiInfoRequest'
       weatherRequest:
         $ref: '#/components/messages/WeatherRequest'
+      sunTimesRequest:
+        $ref: '#/components/messages/SunTimesRequest'
 
 operations:
   # ============================================================================
@@ -556,6 +560,7 @@ operations:
       - $ref: '#/channels/uiOrders/messages/buildingNameResponse'
       - $ref: '#/channels/uiOrders/messages/fullUiInfoResponse'
       - $ref: '#/channels/uiOrders/messages/weatherResponse'
+      - $ref: '#/channels/uiOrders/messages/sunTimesResponse'
 
   receiveUiRequest:
     action: receive
@@ -568,6 +573,7 @@ operations:
       - $ref: '#/channels/uiEvents/messages/buildingNameRequest'
       - $ref: '#/channels/uiEvents/messages/fullUiInfoRequest'
       - $ref: '#/channels/uiEvents/messages/weatherRequest'
+      - $ref: '#/channels/uiEvents/messages/sunTimesRequest'
 
 components:
   # ============================================================================
@@ -1380,6 +1386,34 @@ components:
       x-opencaps-type: '0x03'
       x-opencaps-op: '0x05'
 
+    SunTimesRequest:
+      name: Sun Times Request
+      title: Request sunrise/sunset times
+      summary: Bridge requests sunrise and sunset times for a building
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/BuildingIdPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x04'
+      x-opencaps-op: '0x04'
+
+    SunTimesResponse:
+      name: Sun Times Response
+      title: Sunrise/sunset times response
+      summary: Response containing sunrise and sunset timestamps
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/SunTimesPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x04'
+      x-opencaps-op: '0x05'
+
   # ============================================================================
   # MESSAGE TRAITS
   # ============================================================================
@@ -2033,7 +2067,7 @@ components:
       type: object
       description: |
         Full UI information payload.
-        Binary layout: [weather: 8 bytes] [buildingNameLength: 1 byte] [buildingName: N bytes] [zones...]
+        Binary layout: [weather: 8 bytes] [sunrise: 8 bytes] [sunset: 8 bytes] [buildingNameLength: 1 byte] [buildingName: N bytes] [zones...]
       properties:
         temperature:
           type: number
@@ -2050,6 +2084,14 @@ components:
           minLength: 3
           maxLength: 3
           description: Weather icon code (3 bytes ASCII, e.g., "01d", "10n")
+        sunrise:
+          type: integer
+          format: uint64
+          description: Sunrise Unix timestamp (8 bytes)
+        sunset:
+          type: integer
+          format: uint64
+          description: Sunset Unix timestamp (8 bytes)
         buildingNameLength:
           type: integer
           format: uint8
@@ -2084,3 +2126,18 @@ components:
           maxLength: 3
           description: Weather icon code (3 bytes ASCII, e.g., "01d", "10n")
           example: "01d"
+
+    SunTimesPayload:
+      type: object
+      description: |
+        Sunrise and sunset times payload (16 bytes total, raw data).
+        Binary layout: [sunrise: 8 bytes uint64] [sunset: 8 bytes uint64]
+      properties:
+        sunrise:
+          type: integer
+          format: uint64
+          description: Sunrise Unix timestamp (8 bytes)
+        sunset:
+          type: integer
+          format: uint64
+          description: Sunset Unix timestamp (8 bytes)
