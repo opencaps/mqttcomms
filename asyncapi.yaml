@@ -200,6 +200,8 @@ channels:
         $ref: '#/components/messages/PlanningEvent'
       activateGroup:
         $ref: '#/components/messages/ActivateGroup'
+      deactivateGroup:
+        $ref: '#/components/messages/DeactivateGroup'
       sendDerogation:
         $ref: '#/components/messages/SendDerogation'
 
@@ -481,6 +483,7 @@ operations:
       - $ref: '#/channels/calendarOrders/messages/planningGroupEvent'
       - $ref: '#/channels/calendarOrders/messages/planningEvent'
       - $ref: '#/channels/calendarOrders/messages/activateGroup'
+      - $ref: '#/channels/calendarOrders/messages/deactivateGroup'
       - $ref: '#/channels/calendarOrders/messages/sendDerogation'
 
   receiveCalendarEvent:
@@ -1238,6 +1241,20 @@ components:
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x08'
+      x-opencaps-op: '0x05'
+
+    DeactivateGroup:
+      name: Deactivate Group
+      title: Deactivate planning group
+      summary: Deactivate a planning group from UI
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/GroupIdPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x0A'
       x-opencaps-op: '0x05'
 
     SendDerogation:
