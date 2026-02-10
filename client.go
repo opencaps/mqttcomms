@@ -226,6 +226,17 @@ func (c *Client) Subscribe(topic string, callback MQTT.MessageHandler) {
 	})
 }
 
+// SubscribeWait subscribes to a topic and waits for the subscription to be confirmed by the broker.
+func (c *Client) SubscribeWait(topic string, callback MQTT.MessageHandler, timeout time.Duration) error {
+	token := c.client.Subscribe(topic, 0, func(client MQTT.Client, msg MQTT.Message) {
+		callback(client, msg)
+	})
+	if !token.WaitTimeout(timeout) {
+		return fmt.Errorf("subscribe timeout for topic %s", topic)
+	}
+	return token.Error()
+}
+
 // Unsubscribe unsubscribes the client from the specified MQTT topic.
 // It takes a single parameter:
 // - topic: the topic string from which the client should unsubscribe.
