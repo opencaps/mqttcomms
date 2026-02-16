@@ -313,6 +313,29 @@ channels:
         $ref: '#/components/messages/TelemetryData'
 
   # ============================================================================
+  # TERMINAL CHANNELS
+  # ============================================================================
+  terminalOrders:
+    address: '{uid}/TerminalOrders'
+    description: Terminal sensor commands sent to bridges (e.g., configuration)
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      terminalCommand:
+        $ref: '#/components/messages/TerminalCommand'
+
+  terminalEvents:
+    address: '{uid}/TerminalEvents'
+    description: Terminal sensor data published by bridges (internal temperature, etc.)
+    parameters:
+      uid:
+        $ref: '#/components/parameters/uid'
+    messages:
+      terminalData:
+        $ref: '#/components/messages/TerminalData'
+
+  # ============================================================================
   # UI CHANNELS
   # ============================================================================
   uiOrders:
@@ -548,6 +571,27 @@ operations:
     description: Services subscribe to receive item status change events.
     messages:
       - $ref: '#/channels/itemStatusTelemetry/messages/itemStatus'
+
+  # ============================================================================
+  # TERMINAL OPERATIONS
+  # ============================================================================
+  sendTerminalCommand:
+    action: send
+    channel:
+      $ref: '#/channels/terminalOrders'
+    summary: Send command to terminal sensors on a bridge
+    description: Services publish commands to terminal sensors via TerminalOrders topic.
+    messages:
+      - $ref: '#/channels/terminalOrders/messages/terminalCommand'
+
+  receiveTerminalData:
+    action: receive
+    channel:
+      $ref: '#/channels/terminalEvents'
+    summary: Receive terminal sensor data from bridges
+    description: Services subscribe to receive internal sensor data (temperature, etc.) from bridges.
+    messages:
+      - $ref: '#/channels/terminalEvents/messages/terminalData'
 
   # ============================================================================
   # UI OPERATIONS
@@ -945,13 +989,13 @@ components:
       x-opencaps-type: '0x07'
       x-opencaps-op: '0x01'
 
-    AddThermostatProbe:
-      name: Add Thermostat Probe
-      title: Add thermostat probe
-      summary: Add a new thermostat probe to a zone
+    AddInternalTmpSensor:
+      name: Add Internal TMP Sensor
+      title: Add internal temperature sensor
+      summary: Register an internal temperature probe with zone and item ID
       contentType: application/octet-stream
       payload:
-        $ref: '#/components/schemas/ZonePayload'
+        $ref: '#/components/schemas/AddInternalSensorPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
       traits:
@@ -959,18 +1003,60 @@ components:
       x-opencaps-type: '0x08'
       x-opencaps-op: '0x01'
 
-    DeleteThermostatProbe:
-      name: Delete Thermostat Probe
-      title: Delete thermostat probe
-      summary: Remove a thermostat probe from a zone
+    AddInternalHumSensor:
+      name: Add Internal HUM Sensor
+      title: Add internal humidity sensor
+      summary: Register an internal humidity probe with zone and item ID
       contentType: application/octet-stream
       payload:
-        $ref: '#/components/schemas/ZonePayload'
+        $ref: '#/components/schemas/AddInternalSensorPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x09'
+      x-opencaps-op: '0x01'
+
+    AddInternalCovSensor:
+      name: Add Internal COV Sensor
+      title: Add internal VOC sensor
+      summary: Register an internal VOC (COV) probe with zone and item ID
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/AddInternalSensorPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x0A'
+      x-opencaps-op: '0x01'
+
+    AddInternalNoxSensor:
+      name: Add Internal NOX Sensor
+      title: Add internal NOx sensor
+      summary: Register an internal NOx probe with zone and item ID
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/AddInternalSensorPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x0B'
+      x-opencaps-op: '0x01'
+
+    RemoveInternalSensors:
+      name: Remove Internal Sensors
+      title: Remove all internal sensors in a zone
+      summary: Remove all internal sensors from a zone on the bridge
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/RemoveInternalSensorPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x0E'
       x-opencaps-op: '0x01'
 
     AddEnoceanByEep:
@@ -1287,6 +1373,33 @@ components:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x00'
       x-opencaps-op: '0x02'
+
+    # --------------------------------------------------------------------------
+    # TERMINAL MESSAGES
+    # --------------------------------------------------------------------------
+    TerminalCommand:
+      name: Terminal Command
+      title: Terminal sensor command
+      summary: Command sent to terminal sensors on a bridge via TerminalOrders topic
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/TerminalSensorDataPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+
+    TerminalData:
+      name: Terminal Data
+      title: Terminal sensor data event
+      summary: Sensor data published by bridges on TerminalEvents topic
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/TerminalSensorDataPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
 
     # --------------------------------------------------------------------------
     # UI MESSAGES
@@ -2025,6 +2138,64 @@ components:
         data:
           type: string
           description: Data value as string representation
+
+    # --------------------------------------------------------------------------
+    # TERMINAL SCHEMAS
+    # --------------------------------------------------------------------------
+    AddInternalSensorPayload:
+      type: object
+      description: |
+        Payload for DEV_ADD_INTERNAL_*_SENSOR (0x08=TMP, 0x09=HUM, 0x0A=COV, 0x0B=NOX).
+        Registers an internal sensor on the bridge with its zone and item ID.
+        Binary layout: [zoneIdLen: 1][zoneId: N][itemIdLen: 1][itemId: N]
+      properties:
+        zoneIdLength:
+          type: integer
+          format: uint8
+          description: Length of zone ID string
+        zoneId:
+          type: string
+          description: Zone ID as ASCII string
+        itemIdLength:
+          type: integer
+          format: uint8
+          description: Length of item ID string
+        itemId:
+          type: string
+          description: Item ID as ASCII string
+
+    RemoveInternalSensorPayload:
+      type: object
+      description: |
+        DEV_REMOVE_INTERNAL_SENSORS (0x0E) payload.
+        Removes all internal sensors from a zone on the bridge.
+        Binary layout: [zoneIdLen: 1][zoneId: N]
+      properties:
+        zoneIdLength:
+          type: integer
+          format: uint8
+          description: Length of zone ID string
+        zoneId:
+          type: string
+          description: Zone ID as ASCII string
+
+    TerminalSensorDataPayload:
+      type: object
+      description: |
+        Terminal sensor data published on TerminalEvents.
+        Bridge-manager forwards this as-is via DataReceived(bridgeID, "MQTT", data).
+        Binary layout: [itemIdLen: 1][itemId: N][value: ASCII float string, e.g. "21.5"]
+      properties:
+        itemIdLength:
+          type: integer
+          format: uint8
+          description: Length of item ID string
+        itemId:
+          type: string
+          description: Item ID as ASCII string (same ID sent during AddInternalSensor)
+        value:
+          type: string
+          description: Sensor value as ASCII float string (e.g. "21.5")
 
     # --------------------------------------------------------------------------
     # UI SCHEMAS
