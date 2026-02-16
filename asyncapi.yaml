@@ -1059,6 +1059,20 @@ components:
       x-opencaps-type: '0x0E'
       x-opencaps-op: '0x01'
 
+    UpdateZoneInternalSensors:
+      name: Update Zone Internal Sensors
+      title: Update zone for an internal sensor
+      summary: Change the zone assignment for an internal sensor on the bridge
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/UpdateZoneInternalSensorPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x0C'
+      x-opencaps-op: '0x01'
+
     AddEnoceanByEep:
       name: Add EnOcean by EEP
       title: Add EnOcean device by EEP profile
@@ -2178,6 +2192,35 @@ components:
         zoneId:
           type: string
           description: Zone ID as ASCII string
+
+    UpdateZoneInternalSensorPayload:
+      type: object
+      description: |
+        DEV_UPDATE_ZONE_INTERNAL_SENSORS (0x0C) payload.
+        Updates the zone assignment for an internal sensor on the bridge.
+        Binary layout: [oldZoneIdLen: 1][oldZoneId: N][newZoneIdLen: 1][newZoneId: N][itemIdLen: 1][itemId: N]
+      properties:
+        oldZoneIdLength:
+          type: integer
+          format: uint8
+          description: Length of old zone ID string
+        oldZoneId:
+          type: string
+          description: Old zone ID as ASCII string
+        newZoneIdLength:
+          type: integer
+          format: uint8
+          description: Length of new zone ID string
+        newZoneId:
+          type: string
+          description: New zone ID as ASCII string
+        itemIdLength:
+          type: integer
+          format: uint8
+          description: Length of item ID string
+        itemId:
+          type: string
+          description: Item ID as ASCII string
 
     TerminalSensorDataPayload:
       type: object
