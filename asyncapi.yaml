@@ -196,14 +196,8 @@ channels:
         $ref: '#/components/messages/SendExceptions'
       planningGroupEvent:
         $ref: '#/components/messages/PlanningGroupEvent'
-      planningEvent:
-        $ref: '#/components/messages/PlanningEvent'
-      activateGroup:
-        $ref: '#/components/messages/ActivateGroup'
-      deactivateGroup:
-        $ref: '#/components/messages/DeactivateGroup'
-      sendDerogation:
-        $ref: '#/components/messages/SendDerogation'
+      clearAllPlannings:
+        $ref: '#/components/messages/ClearAllPlannings'
 
   calendarEvents:
     address: '{uid}/CalendarEvents'
@@ -218,14 +212,16 @@ channels:
         $ref: '#/components/messages/GetPlanningRequest'
       getExceptionsRequest:
         $ref: '#/components/messages/GetExceptionsRequest'
-      deletePlanningRequest:
-        $ref: '#/components/messages/DeletePlanningRequest'
-      deleteExceptionsRequest:
-        $ref: '#/components/messages/DeleteExceptionsRequest'
       planningResponse:
         $ref: '#/components/messages/PlanningResponse'
       exceptionsResponse:
         $ref: '#/components/messages/ExceptionsResponse'
+      groupActivatedEvent:
+        $ref: '#/components/messages/GroupActivatedEvent'
+      groupDeactivatedEvent:
+        $ref: '#/components/messages/GroupDeactivatedEvent'
+      exceptionCreatedEvent:
+        $ref: '#/components/messages/ExceptionCreatedEvent'
 
   # ============================================================================
   # TELEMETRY CHANNELS
@@ -499,30 +495,38 @@ operations:
     summary: Send calendar/planning command to a bridge
     description: |
       Services publish calendar commands for managing temperature schedules,
-      exceptions, planning groups, and derogations.
+      exceptions, and planning groups. Four outbound message types:
+      - 0x06 SYNC_PLANNING_GROUP: Full group metadata with embedded plannings (→ ESP UI)
+      - 0x00 SET_ZONE_PLANNING: Weekly setpoints + optional exceptions per zone (→ NRF regulation)
+      - 0x01 SET_ZONE_EXCEPTIONS: Exception-only update for one zone (→ NRF regulation)
+      - 0x0B CLEAR_ALL_PLANNINGS: Clear all zone plannings + exceptions (→ NRF regulation)
     messages:
       - $ref: '#/channels/calendarOrders/messages/sendPlanning'
       - $ref: '#/channels/calendarOrders/messages/sendExceptions'
       - $ref: '#/channels/calendarOrders/messages/planningGroupEvent'
-      - $ref: '#/channels/calendarOrders/messages/planningEvent'
-      - $ref: '#/channels/calendarOrders/messages/activateGroup'
-      - $ref: '#/channels/calendarOrders/messages/deactivateGroup'
-      - $ref: '#/channels/calendarOrders/messages/sendDerogation'
+      - $ref: '#/channels/calendarOrders/messages/clearAllPlannings'
 
   receiveCalendarEvent:
     action: receive
     channel:
       $ref: '#/channels/calendarEvents'
     summary: Receive calendar events from bridges
-    description: Services subscribe to receive calendar-related requests and responses.
+    description: |
+      Services subscribe to receive calendar-related events from bridges.
+      Includes bridge-initiated requests and ESP touchscreen user actions:
+      - 0x02/0x03: Bridge requests schedule/exceptions
+      - 0x08: User activated a planning group on ESP
+      - 0x09: User created an exception on ESP
+      - 0x0A: User deactivated a planning group on ESP
     messages:
       - $ref: '#/channels/calendarEvents/messages/calendarAck'
       - $ref: '#/channels/calendarEvents/messages/getPlanningRequest'
       - $ref: '#/channels/calendarEvents/messages/getExceptionsRequest'
-      - $ref: '#/channels/calendarEvents/messages/deletePlanningRequest'
-      - $ref: '#/channels/calendarEvents/messages/deleteExceptionsRequest'
       - $ref: '#/channels/calendarEvents/messages/planningResponse'
       - $ref: '#/channels/calendarEvents/messages/exceptionsResponse'
+      - $ref: '#/channels/calendarEvents/messages/groupActivatedEvent'
+      - $ref: '#/channels/calendarEvents/messages/groupDeactivatedEvent'
+      - $ref: '#/channels/calendarEvents/messages/exceptionCreatedEvent'
 
   # ============================================================================
   # TELEMETRY OPERATIONS
@@ -1177,9 +1181,12 @@ components:
     # CALENDAR MESSAGES
     # --------------------------------------------------------------------------
     SendPlanning:
-      name: Send Planning
-      title: Send temperature planning
-      summary: Send temperature schedule for a zone
+      name: Set Zone Planning
+      title: Set zone planning (0x00)
+      summary: |
+        Send weekly setpoints for a zone with optional trailing exceptions.
+        Format: [zoneID_len][zoneID][mode][7×{pointCount,[time,value]×N}][optional: exceptionCount,[start(8),end(8),value]×N]
+        The exception block is backward-compatible: if no data remains after the 7-day setpoints, NRF assumes 0 exceptions.
       contentType: application/octet-stream
       payload:
         $ref: '#/components/schemas/PlanningPayload'
@@ -1191,9 +1198,11 @@ components:
       x-opencaps-op: '0x01'
 
     SendExceptions:
-      name: Send Exceptions
-      title: Send temperature exceptions
-      summary: Send temperature exceptions for a zone
+      name: Set Zone Exceptions
+      title: Set zone exceptions (0x01)
+      summary: |
+        Send exception-only update for a zone. Includes factor field for multi-factor zone support.
+        Format: [zoneID_len][zoneID][mode][factor_len][factor][exceptionCount,[start(8),end(8),value]×N]
       contentType: application/octet-stream
       payload:
         $ref: '#/components/schemas/ExceptionsPayload'
@@ -1230,34 +1239,6 @@ components:
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x03'
-      x-opencaps-op: '0x04'
-
-    DeletePlanningRequest:
-      name: Delete Planning Request
-      title: Delete zone planning
-      summary: Delete temperature planning and exceptions for a zone
-      contentType: application/octet-stream
-      payload:
-        $ref: '#/components/schemas/ZonePayload'
-      headers:
-        $ref: '#/components/schemas/MessageHeader'
-      traits:
-        - $ref: '#/components/messageTraits/commonMessage'
-      x-opencaps-type: '0x04'
-      x-opencaps-op: '0x04'
-
-    DeleteExceptionsRequest:
-      name: Delete Exceptions Request
-      title: Delete zone exceptions
-      summary: Delete temperature exceptions for a zone
-      contentType: application/octet-stream
-      payload:
-        $ref: '#/components/schemas/ZonePayload'
-      headers:
-        $ref: '#/components/schemas/MessageHeader'
-      traits:
-        - $ref: '#/components/messageTraits/commonMessage'
-      x-opencaps-type: '0x05'
       x-opencaps-op: '0x04'
 
     PlanningResponse:
@@ -1302,9 +1283,13 @@ components:
       x-opencaps-op: '0x03'
 
     PlanningGroupEvent:
-      name: Planning Group Event
-      title: Planning group event
-      summary: Create, modify, or delete a planning group
+      name: Sync Planning Group
+      title: Sync planning group (0x06)
+      summary: |
+        Create, update, or remove a planning group. Sent to ESP for UI display.
+        New format includes embedded plannings list:
+        [op(1)][groupID_len(1)][groupID][name_len(1)][name][activated(1)]
+        [num_plannings(1)]{[planningID_len(1)][planningID][zoneID_len(1)][zoneID][factor_len(1)][factor]}×N
       contentType: application/octet-stream
       payload:
         $ref: '#/components/schemas/PlanningGroupPayload'
@@ -1315,24 +1300,27 @@ components:
       x-opencaps-type: '0x06'
       x-opencaps-op: '0x01'
 
-    PlanningEvent:
-      name: Planning Event
-      title: Planning event
-      summary: Create, modify, or delete a planning
+    ClearAllPlannings:
+      name: Clear All Plannings
+      title: Clear all plannings (0x0B)
+      summary: |
+        Clear all zone plannings and exceptions from NRF memory and NVS.
+        Empty body. One message replaces N× delete operations.
       contentType: application/octet-stream
-      payload:
-        $ref: '#/components/schemas/PlanningEventPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
-      x-opencaps-type: '0x07'
+      x-opencaps-type: '0x0B'
       x-opencaps-op: '0x01'
 
-    ActivateGroup:
-      name: Activate Group
-      title: Activate planning group
-      summary: Activate a planning group from UI
+    GroupActivatedEvent:
+      name: Group Activated Event
+      title: Group activated on ESP (0x08)
+      summary: |
+        Inbound event: user activated a planning group on the ESP touchscreen.
+        Body contains raw group ID string (MongoDB ObjectID hex).
+        NRF is relay-only — does not update local regulation on activate.
       contentType: application/octet-stream
       payload:
         $ref: '#/components/schemas/GroupIdPayload'
@@ -1343,10 +1331,13 @@ components:
       x-opencaps-type: '0x08'
       x-opencaps-op: '0x05'
 
-    DeactivateGroup:
-      name: Deactivate Group
-      title: Deactivate planning group
-      summary: Deactivate a planning group from UI
+    GroupDeactivatedEvent:
+      name: Group Deactivated Event
+      title: Group deactivated on ESP (0x0A)
+      summary: |
+        Inbound event: user deactivated a planning group on the ESP touchscreen.
+        Body contains raw group ID string (MongoDB ObjectID hex).
+        NRF is relay-only — does not clear local regulation on deactivate.
       contentType: application/octet-stream
       payload:
         $ref: '#/components/schemas/GroupIdPayload'
@@ -1357,18 +1348,21 @@ components:
       x-opencaps-type: '0x0A'
       x-opencaps-op: '0x05'
 
-    SendDerogation:
-      name: Send Derogation
-      title: Send derogation event
-      summary: Send a temperature derogation for a zone
+    ExceptionCreatedEvent:
+      name: Exception Created Event
+      title: Exception created on ESP (0x09)
+      summary: |
+        Inbound event: user created a temperature override on the ESP touchscreen.
+        Format: [zoneID_len][zoneID][mode][factor_len][factor][exceptionCount][start(8),end(8),value]×N
+        NRF updates local regulation AND relays to MQTT.
       contentType: application/octet-stream
       payload:
-        $ref: '#/components/schemas/DerogationPayload'
+        $ref: '#/components/schemas/ExceptionsPayload'
       headers:
         $ref: '#/components/schemas/MessageHeader'
       traits:
         - $ref: '#/components/messageTraits/commonMessage'
-      x-opencaps-type: '0x03'
+      x-opencaps-type: '0x09'
       x-opencaps-op: '0x05'
 
     # --------------------------------------------------------------------------
@@ -1965,7 +1959,11 @@ components:
     # --------------------------------------------------------------------------
     PlanningPayload:
       type: object
-      description: Temperature planning payload
+      description: |
+        SET_ZONE_PLANNING (0x00) payload. Weekly setpoints with optional trailing exceptions.
+        Format: [zoneID_len(1)][zoneID][mode(1)][7×{pointCount(1),[time(1),value(1)]×N}]
+        Optional trailing block: [exceptionCount(1)][start(8 LE),end(8 LE),value(1)]×N
+        If no data remains after 7-day setpoints, NRF assumes 0 exceptions (backward-compatible).
       properties:
         zoneIdLength:
           type: integer
@@ -1977,16 +1975,30 @@ components:
         mode:
           type: integer
           format: uint8
-          description: Operating mode (0x00 = ON/OFF, 0x01 = pilot wire)
+          description: Operating mode (0x00 = hysteresis, 0x01 = pilot wire)
           enum: [0x00, 0x01]
-        pointCount:
+        days:
+          type: array
+          description: 7 days of setpoints (Mon-Sun)
+          items:
+            type: object
+            properties:
+              pointCount:
+                type: integer
+                format: uint8
+              points:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SchedulePoint'
+        exceptionCount:
           type: integer
           format: uint8
-          description: Number of schedule points for the day
-        points:
+          description: Optional — number of bundled exceptions (0 if absent)
+        exceptions:
           type: array
+          description: Optional — bundled exceptions after the 7-day setpoints
           items:
-            $ref: '#/components/schemas/SchedulePoint'
+            $ref: '#/components/schemas/Exception'
 
     SchedulePoint:
       type: object
@@ -1995,17 +2007,20 @@ components:
         time:
           type: integer
           format: uint8
-          description: Time in minutes divided by 10 (e.g., 60 = 10:00)
+          description: End time in minutes divided by 10 (e.g., 60 = 10:00)
         setpoint:
           type: integer
           format: uint8
           description: |
-            For ON/OFF mode: Temperature in Celsius * 2 (e.g., 42 = 21°C)
+            For hysteresis mode: Temperature in Celsius × 2 (e.g., 42 = 21°C)
             For pilot wire mode: Pilot wire mode code
 
     ExceptionsPayload:
       type: object
-      description: Temperature exceptions payload
+      description: |
+        SET_ZONE_EXCEPTIONS (0x01) / exception event (0x09) payload.
+        Includes factor field for multi-factor zone support.
+        Format: [zoneID_len(1)][zoneID][mode(1)][factor_len(1)][factor][exceptionCount(1)][start(8 LE),end(8 LE),value(1)]×N
       properties:
         zoneIdLength:
           type: integer
@@ -2017,7 +2032,14 @@ components:
         mode:
           type: integer
           format: uint8
-          description: Operating mode (0x00 = ON/OFF, 0x01 = pilot wire)
+          description: Operating mode (0x00 = hysteresis, 0x01 = pilot wire)
+        factorLength:
+          type: integer
+          format: uint8
+          description: Length of factor string
+        factor:
+          type: string
+          description: Factor string (e.g. "TMP", "BRI", "BRIEXT")
         exceptionCount:
           type: integer
           format: uint8
@@ -2034,104 +2056,83 @@ components:
         start:
           type: integer
           format: uint64
-          description: Start Unix timestamp (8 bytes)
+          description: Start Unix timestamp (8 bytes, little-endian)
         end:
           type: integer
           format: uint64
-          description: End Unix timestamp (8 bytes)
+          description: End Unix timestamp (8 bytes, little-endian)
         setpoint:
           type: integer
           format: uint8
-          description: Temperature setpoint (Celsius * 2)
+          description: Temperature setpoint (Celsius × 2)
 
     PlanningGroupPayload:
       type: object
-      description: Planning group event payload
+      description: |
+        SYNC_PLANNING_GROUP (0x06) payload. Full group metadata with embedded plannings list.
+        Format: [op(1)][groupID_len(1)][groupID][name_len(1)][name][activated(1)]
+        [num_plannings(1)]{[planningID_len(1)][planningID][zoneID_len(1)][zoneID][factor_len(1)][factor]}×N
       properties:
         eventOp:
           type: integer
           format: uint8
-          description: Event operation (0x00 = create, 0x01 = modify, 0x02 = delete)
+          description: Operation (0x00 = create, 0x01 = update, 0x02 = remove)
           enum: [0x00, 0x01, 0x02]
         groupIdLength:
           type: integer
           format: uint8
-          description: Length of group ID string
+          description: Length of group ID string (MongoDB ObjectID hex = 24 bytes)
         groupId:
           type: string
           description: Group ID as ASCII string
+        nameLength:
+          type: integer
+          format: uint8
+          description: Length of group name string
         groupName:
           type: string
           description: Group name as ASCII string
         groupActivated:
           type: integer
           format: uint8
-          description: Group activation status (0x00 = disabled, 0x01 = enabled)
-
-    PlanningEventPayload:
-      type: object
-      description: Planning event payload
-      properties:
-        eventOp:
+          description: Activation status (0x00 = disabled, 0x01 = enabled)
+        numPlannings:
           type: integer
           format: uint8
-          description: Event operation (0x00 = create, 0x01 = modify, 0x02 = delete)
-          enum: [0x00, 0x01, 0x02]
-        groupIdLength:
-          type: integer
-          format: uint8
-          description: Length of group ID string
-        groupId:
-          type: string
-          description: Group ID as ASCII string
-        planningIdLength:
-          type: integer
-          format: uint8
-          description: Length of planning ID string
-        planningId:
-          type: string
-          description: Planning ID as ASCII string
-        zoneId:
-          type: string
-          description: Zone ID as ASCII string
-        factor:
-          type: integer
-          format: uint8
-          description: Planning factor
+          description: Number of embedded planning entries
+        plannings:
+          type: array
+          description: Embedded planning entries
+          items:
+            type: object
+            properties:
+              planningIdLength:
+                type: integer
+                format: uint8
+              planningId:
+                type: string
+                description: Planning ID (MongoDB ObjectID hex)
+              zoneIdLength:
+                type: integer
+                format: uint8
+              zoneId:
+                type: string
+              factorLength:
+                type: integer
+                format: uint8
+              factor:
+                type: string
+                description: Factor (e.g. "TMP", "BRI", "BRIEXT")
 
     GroupIdPayload:
       type: object
-      description: Group ID payload for activation
+      description: |
+        Group ID payload for activate/deactivate events (0x08, 0x0A).
+        Body is raw group ID string (MongoDB ObjectID hex, e.g. "507f1f77bcf86cd799439014").
       properties:
         groupId:
           type: string
-          description: Group ID to activate
-
-    DerogationPayload:
-      type: object
-      description: Temperature derogation payload
-      properties:
-        zoneIdLength:
-          type: integer
-          format: uint8
-        zoneId:
-          type: string
-        mode:
-          type: integer
-          format: uint8
-        exceptionCount:
-          type: integer
-          format: uint8
-          const: 1
-        start:
-          type: integer
-          format: uint64
-        end:
-          type: integer
-          format: uint64
-        setpoint:
-          type: integer
-          format: uint8
+          description: Group ID as raw ASCII string
 
     # --------------------------------------------------------------------------
     # TELEMETRY SCHEMAS

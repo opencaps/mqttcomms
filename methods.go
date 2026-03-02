@@ -40,17 +40,15 @@ const (
 	TM_PUBLISH  = 0x01
 
 	// Calendar methods
-	CL_SET_ZONE_PLANNING                  = 0x00
-	CL_SET_ZONE_EXCEPTION                 = 0x01
-	CL_GET_ZONE_PLANNING                  = 0x02
-	CL_GET_ZONE_EXCEPTION                 = 0x03
-	CL_DELETE_ZONE_PLANNING               = 0x04
-	CL_DELETE_ZONE_EXCEPTION              = 0x05
-	CL_SEND_PLANNING_GROUP_EVT            = 0x06
-	CL_SEND_PLANNING_EVT                  = 0x07
-	CL_PLANNING_GROUP_ACTIVATE_RECEIVED   = 0x08
-	CL_PLANNING_EXCEPTION_EVT_RECEIVED    = 0x09
-	CL_PLANNING_GROUP_DEACTIVATE_RECEIVED = 0x0A
+	CL_SET_ZONE_PLANNING                  = 0x00 // Weekly setpoints + optional exceptions for one zone
+	CL_SET_ZONE_EXCEPTION                 = 0x01 // Exception-only update for one zone
+	CL_GET_ZONE_PLANNING                  = 0x02 // Bridge requests schedule (inbound)
+	CL_GET_ZONE_EXCEPTION                 = 0x03 // Bridge requests exceptions (inbound)
+	CL_SEND_PLANNING_GROUP_EVT            = 0x06 // Full group metadata with embedded plannings (UI)
+	CL_PLANNING_GROUP_ACTIVATE_RECEIVED   = 0x08 // User activated group on ESP (inbound)
+	CL_PLANNING_EXCEPTION_EVT_RECEIVED    = 0x09 // User created exception on ESP (inbound)
+	CL_PLANNING_GROUP_DEACTIVATE_RECEIVED = 0x0A // User deactivated group on ESP (inbound)
+	CL_CLEAR_ALL_PLANNINGS                = 0x0B // Clear all zone plannings + exceptions
 
 	// Telemetry methods
 	TELEMETRY = 0x00
