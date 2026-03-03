@@ -222,6 +222,8 @@ channels:
         $ref: '#/components/messages/GroupDeactivatedEvent'
       exceptionCreatedEvent:
         $ref: '#/components/messages/ExceptionCreatedEvent'
+      syncGroupsHashEvent:
+        $ref: '#/components/messages/SyncGroupsHashEvent'
 
   # ============================================================================
   # TELEMETRY CHANNELS
@@ -518,6 +520,7 @@ operations:
       - 0x08: User activated a planning group on ESP
       - 0x09: User created an exception on ESP
       - 0x0A: User deactivated a planning group on ESP
+      - 0x0C: Bridge sends CRC32 groups hash for sync check
     messages:
       - $ref: '#/channels/calendarEvents/messages/calendarAck'
       - $ref: '#/channels/calendarEvents/messages/getPlanningRequest'
@@ -527,6 +530,7 @@ operations:
       - $ref: '#/channels/calendarEvents/messages/groupActivatedEvent'
       - $ref: '#/channels/calendarEvents/messages/groupDeactivatedEvent'
       - $ref: '#/channels/calendarEvents/messages/exceptionCreatedEvent'
+      - $ref: '#/channels/calendarEvents/messages/syncGroupsHashEvent'
 
   # ============================================================================
   # TELEMETRY OPERATIONS
@@ -1365,6 +1369,23 @@ components:
       x-opencaps-type: '0x09'
       x-opencaps-op: '0x05'
 
+    SyncGroupsHashEvent:
+      name: Sync Groups Hash
+      title: Groups hash for sync check (0x0C)
+      summary: |
+        Bridge sends CRC32-IEEE hash of its stored planning groups on MQTT connect.
+        EasySched compares with its own hash and resyncs only on mismatch.
+        Body: 4 bytes, little-endian CRC32-IEEE hash.
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/GroupsHashPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x0C'
+      x-opencaps-op: '0x05'
+
     # --------------------------------------------------------------------------
     # TELEMETRY MESSAGES
     # --------------------------------------------------------------------------
@@ -2133,6 +2154,20 @@ components:
         groupId:
           type: string
           description: Group ID as raw ASCII string
+
+    GroupsHashPayload:
+      type: object
+      description: |
+        SYNC_GROUPS_HASH (0x0C) payload.
+        4-byte little-endian CRC32-IEEE hash of the bridge's planning group state.
+        Hash input: groups sorted by ID, each [groupID][name][activated(0/1)][numSchedules]
+        then schedules sorted by ID, each [scheduleID][zoneID][factor].
+        Hash 0x00000000 means no groups stored.
+      properties:
+        hash:
+          type: integer
+          format: uint32
+          description: CRC32-IEEE hash (4 bytes, little-endian)
 
     # --------------------------------------------------------------------------
     # TELEMETRY SCHEMAS
