@@ -70,6 +70,8 @@ channels:
         $ref: '#/components/messages/ResetCommand'
       entityIdCommand:
         $ref: '#/components/messages/EntityIdCommand'
+      checkEntityIdReady:
+        $ref: '#/components/messages/CheckEntityIdReady'
 
   adminEvents:
     address: '{uid}/AdminEvents'
@@ -84,6 +86,8 @@ channels:
         $ref: '#/components/messages/BridgeInfoResponse'
       bridgeStatusResponse:
         $ref: '#/components/messages/BridgeStatusResponse'
+      checkEntityIdReadyResponse:
+        $ref: '#/components/messages/CheckEntityIdReadyResponse'
 
   # ============================================================================
   # BRIDGE EVENTS CHANNELS
@@ -395,6 +399,7 @@ operations:
       - $ref: '#/channels/adminOrders/messages/bridgeStatusRequest'
       - $ref: '#/channels/adminOrders/messages/resetCommand'
       - $ref: '#/channels/adminOrders/messages/entityIdCommand'
+      - $ref: '#/channels/adminOrders/messages/checkEntityIdReady'
 
   receiveAdminEvent:
     action: receive
@@ -406,6 +411,7 @@ operations:
       - $ref: '#/channels/adminEvents/messages/updateAck'
       - $ref: '#/channels/adminEvents/messages/bridgeInfoResponse'
       - $ref: '#/channels/adminEvents/messages/bridgeStatusResponse'
+      - $ref: '#/channels/adminEvents/messages/checkEntityIdReadyResponse'
 
   # ============================================================================
   # BRIDGE LIFECYCLE OPERATIONS
@@ -837,6 +843,41 @@ components:
         - $ref: '#/components/messageTraits/commonMessage'
       x-opencaps-type: '0x11'
       x-opencaps-op: '0x01'
+
+    CheckEntityIdReady:
+      name: Check Entity ID Ready
+      title: Check if entity ID is set on bridge
+      summary: |
+        Probe sent to bridge to check if entity ID has been set by the cloud.
+        Bridge responds with a 1-byte body: 0x01 (ready) or 0x00 (not ready).
+        Also emitted unsolicited by the bridge on AdminEvents after SET_ENTITY_ID
+        is processed, with body 0x01 to signal readiness.
+      contentType: application/octet-stream
+      payload:
+        type: object
+        description: Empty payload for the probe request
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x14'
+      x-opencaps-op: '0x02'
+
+    CheckEntityIdReadyResponse:
+      name: Check Entity ID Ready Response
+      title: Entity ID readiness response from bridge
+      summary: |
+        Response to CheckEntityIdReady probe, or unsolicited event after
+        SET_ENTITY_ID is processed. Body is 1 byte: 0x01 = ready, 0x00 = not ready.
+      contentType: application/octet-stream
+      payload:
+        $ref: '#/components/schemas/EntityIdReadyPayload'
+      headers:
+        $ref: '#/components/schemas/MessageHeader'
+      traits:
+        - $ref: '#/components/messageTraits/commonMessage'
+      x-opencaps-type: '0x14'
+      x-opencaps-op: '0x03'
 
     UpdateAck:
       name: Update ACK
@@ -1769,6 +1810,16 @@ components:
         entityId:
           type: string
           description: Entity ID as ASCII string
+
+    EntityIdReadyPayload:
+      type: object
+      description: Entity ID readiness status
+      properties:
+        ready:
+          type: integer
+          format: uint8
+          enum: [0, 1]
+          description: '0x00 = entity ID not set, 0x01 = entity ID set and ready'
 
     # --------------------------------------------------------------------------
     # DEVICE SCHEMAS
