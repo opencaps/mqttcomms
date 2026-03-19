@@ -1350,7 +1350,21 @@ components:
       title: Clear all plannings (0x0B)
       summary: |
         Clear all zone plannings and exceptions from NRF memory and NVS.
-        Empty body. One message replaces N× delete operations.
+
+        **Empty body** (backward compatible): clears all plannings/exceptions, stops regulation.
+
+        **With hold targets body**: clears all plannings/exceptions, then sets a permanent
+        exception per zone to hold at the given target value. Used on group deactivation/deletion
+        to match Hemis behavior (last target persists).
+
+        Body format when hold targets are present:
+        ```
+        [num_zones: 1 byte]
+          [zone_id_len: 1 byte][zone_id: N bytes][target_value: 1 byte]
+          ... repeated num_zones times
+        ```
+        - `target_value` is in 0.5°C steps (e.g., 44 = 22.0°C)
+        - Each zone gets a permanent exception (start=0, end=INT64_MAX) persisted in NVS
       contentType: application/octet-stream
       headers:
         $ref: '#/components/schemas/MessageHeader'

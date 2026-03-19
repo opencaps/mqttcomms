@@ -49,7 +49,7 @@ const (
 	CL_PLANNING_GROUP_ACTIVATE_RECEIVED   = 0x08 // User activated group on ESP (inbound)
 	CL_PLANNING_EXCEPTION_EVT_RECEIVED    = 0x09 // User created exception on ESP (inbound)
 	CL_PLANNING_GROUP_DEACTIVATE_RECEIVED = 0x0A // User deactivated group on ESP (inbound)
-	CL_CLEAR_ALL_PLANNINGS                = 0x0B // Clear all zone plannings + exceptions
+	CL_CLEAR_ALL_PLANNINGS                = 0x0B // Clear all zone plannings + exceptions (optional hold targets in body)
 	CL_SYNC_GROUPS_HASH                   = 0x0C // Bridge sends CRC32 hash of group list for sync check
 
 	// Telemetry methods
