@@ -146,6 +146,9 @@ func (c *Client) Connect() {
 	opts.SetTLSConfig(tlsConfig)
 	opts.SetOnConnectHandler(c.onConnectHandler)
 	opts.SetConnectionLostHandler(c.onConnectionLostHandler)
+	opts.SetKeepAlive(30 * time.Second)
+	opts.SetPingTimeout(10 * time.Second)
+	opts.SetWriteTimeout(5 * time.Second)
 	c.client = MQTT.NewClient(opts)
 
 	c.Log.Info("Trying to connect to the broker mqtts://" + c.conf.MqttUrl)
@@ -267,12 +270,20 @@ func (c *Client) WriteMQTT(data []byte, topic string) error {
 		c.Log.Warning("Mqtt client not instanciate")
 		return errors.New("mqtt client not instanciate")
 	}
+	if !c.client.IsConnected() {
+		return errors.New("mqtt client not connected")
+	}
 
 	c.Log.Debug("Sending data on", topic)
 
-	if token := c.client.Publish(topic, 0, false, data); token.Wait() && token.Error() != nil {
-		c.Log.Warning("Cannot send a command", token.Error().Error())
-		return token.Error()
+	token := c.client.Publish(topic, 0, false, data)
+	if !token.WaitTimeout(5 * time.Second) {
+		c.Log.Warningf("Publish timeout on topic %s", topic)
+		return errors.New("publish timeout")
+	}
+	if err := token.Error(); err != nil {
+		c.Log.Warning("Cannot send a command", err.Error())
+		return err
 	}
 	return nil
 }
