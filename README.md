@@ -187,6 +187,9 @@ Predefined methods are available in [`methods.go`](methods.go):
 
 - **Admin Methods**:
   - `AD_INIT_UPDATE`, `AD_SEND_CHUNK`, `AD_RESET`, etc.
+  - `AD_ENTER_TEST_MODE` (`0x15`): switches the bridge into factory test mode (persists
+    test state + reboots into the test SM) so it can be re-provisioned with a fresh identity.
+    Effective only on a firmware build with test support compiled in.
 
 - **Time Methods**:
   - `TM_GET_TIME`, `TM_PUBLISH`.
