@@ -29,8 +29,15 @@ const (
 	AD_INIT_ESP_OTA       = 0x08
 	AD_SEND_ESP_OTA_CHUNK = 0x09
 	AD_ESP_OTA_FINISHED   = 0x0A
-	AD_FACTORY_RESET      = 0x0B
+	// Network-core DFU (multi-image) — matches firmware init_dfu_net/dfu_pkt_net/fin_dfu_net.
+	AD_INIT_UPDATE_NET     = 0x0B
+	AD_SEND_CHUNK_NET      = 0x0C
+	AD_UPDATE_FINISHED_NET = 0x0D
+
 	AD_SET_ENTITY_ID           = 0x11
+	// NOTE: factory_reset is 0x12 (firmware bumped it when net-core DFU took 0x0B-0x0D).
+	// It was previously (incorrectly) 0x0B here, colliding with net-core DFU init.
+	AD_FACTORY_RESET           = 0x12
 	AD_SET_ENOCEAN_SENDER_ID   = 0x13
 	AD_CHECK_ENTITY_ID_READY   = 0x14
 	AD_ENTER_TEST_MODE         = 0x15

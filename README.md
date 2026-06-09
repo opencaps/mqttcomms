@@ -186,10 +186,20 @@ Predefined methods are available in [`methods.go`](methods.go):
   - `DEV_ADD_NEW`, `DEV_ADD`, `DEV_REMOVE`, etc.
 
 - **Admin Methods**:
-  - `AD_INIT_UPDATE`, `AD_SEND_CHUNK`, `AD_RESET`, etc.
+  - App-core DFU: `AD_INIT_UPDATE`, `AD_SEND_CHUNK`, `AD_UPDATE_FINISHED` (`0x00–0x02`).
+  - Network-core DFU (`0x0B–0x0D`): `AD_INIT_UPDATE_NET`, `AD_SEND_CHUNK_NET`,
+    `AD_UPDATE_FINISHED_NET` — matches the firmware's multi-image net-core DFU.
+  - `AD_GET_INFO`, `AD_GET_STATUS`, `AD_RESET`, `AD_ALIVE`, `AD_BLE_COMFIRM`, ESP-S3 OTA
+    (`AD_INIT_ESP_OTA`/`AD_SEND_ESP_OTA_CHUNK`/`AD_ESP_OTA_FINISHED`).
+  - `AD_SET_ENTITY_ID` (`0x11`), **`AD_FACTORY_RESET` (`0x12`)**, `AD_SET_ENOCEAN_SENDER_ID`
+    (`0x13`), `AD_CHECK_ENTITY_ID_READY` (`0x14`).
   - `AD_ENTER_TEST_MODE` (`0x15`): switches the bridge into factory test mode (persists
     test state + reboots into the test SM) so it can be re-provisioned with a fresh identity.
     Effective only on a firmware build with test support compiled in.
+
+  > Opcodes mirror the firmware `AdminOrderType` enum (the source of truth). `AD_FACTORY_RESET`
+  > is `0x12` — it was previously `0x0B`, which collided with net-core DFU init; callers built
+  > against older mqttcomms must rebuild.
 
 - **Time Methods**:
   - `TM_GET_TIME`, `TM_PUBLISH`.
