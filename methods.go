@@ -42,6 +42,24 @@ const (
 	AD_CHECK_ENTITY_ID_READY   = 0x14
 	AD_ENTER_TEST_MODE         = 0x15
 
+	// ERL OTA over Thread — ADR 0007 step 4. The bridge PULLS: the cloud offers an
+	// image with BEGIN, the bridge asks for each 512 B slice by offset as its 2x512 B
+	// window drains, and reports the outcome with END. One transfer per bridge at a
+	// time; a second BEGIN while one is in flight is refused.
+	//
+	// Bodies are big-endian, like every other body on this channel. EUI-64 travels in
+	// CANONICAL (display) order, not the little-endian form the container embeds — the
+	// cloud reverses it when personalising, per D4.
+	//
+	//	BEGIN     eui64[8] fileVersion[4] fileSize[4] channel[1]
+	//	SLICE_REQ offset[4] length[2]
+	//	SLICE     offset[4] data[<=512]
+	//	END       status[1] fileVersion[4] reason[...]  (reason is UTF-8, may be empty)
+	AD_ERL_OTA_BEGIN     = 0x16
+	AD_ERL_OTA_SLICE_REQ = 0x17
+	AD_ERL_OTA_SLICE     = 0x18
+	AD_ERL_OTA_END       = 0x19
+
 	AD_GOODBYE = 0xFF
 
 	// Time methods
