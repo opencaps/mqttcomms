@@ -2,20 +2,20 @@ package mqttcomms
 
 const (
 	// Device methods
-	DEV_ADD_NEW                = 0x00
-	DEV_ADD                    = 0x01
-	DEV_REMOVE                 = 0x02
-	DEV_GET_ACTUATOR           = 0x03
-	DEV_GET_SENSOR             = 0x04
-	DEV_UPDATE_ZONE            = 0x05
-	DEV_ADD_NEW_ERL            = 0x06
-	ERL_REMOVE                 = 0x07
-	DEV_ADD_INTERNAL_TMP_SENSOR = 0x08
-	DEV_ADD_INTERNAL_HUM_SENSOR = 0x09
-	DEV_ADD_INTERNAL_COV_SENSOR = 0x0A
-	DEV_ADD_INTERNAL_NOX_SENSOR          = 0x0B
-	DEV_UPDATE_ZONE_INTERNAL_SENSORS     = 0x0C
-	DEV_REMOVE_INTERNAL_SENSORS          = 0x0E
+	DEV_ADD_NEW                      = 0x00
+	DEV_ADD                          = 0x01
+	DEV_REMOVE                       = 0x02
+	DEV_GET_ACTUATOR                 = 0x03
+	DEV_GET_SENSOR                   = 0x04
+	DEV_UPDATE_ZONE                  = 0x05
+	DEV_ADD_NEW_ERL                  = 0x06
+	ERL_REMOVE                       = 0x07
+	DEV_ADD_INTERNAL_TMP_SENSOR      = 0x08
+	DEV_ADD_INTERNAL_HUM_SENSOR      = 0x09
+	DEV_ADD_INTERNAL_COV_SENSOR      = 0x0A
+	DEV_ADD_INTERNAL_NOX_SENSOR      = 0x0B
+	DEV_UPDATE_ZONE_INTERNAL_SENSORS = 0x0C
+	DEV_REMOVE_INTERNAL_SENSORS      = 0x0E
 
 	// Admin methods
 	AD_INIT_UPDATE        = 0x00
@@ -34,13 +34,13 @@ const (
 	AD_SEND_CHUNK_NET      = 0x0C
 	AD_UPDATE_FINISHED_NET = 0x0D
 
-	AD_SET_ENTITY_ID           = 0x11
+	AD_SET_ENTITY_ID = 0x11
 	// NOTE: factory_reset is 0x12 (firmware bumped it when net-core DFU took 0x0B-0x0D).
 	// It was previously (incorrectly) 0x0B here, colliding with net-core DFU init.
-	AD_FACTORY_RESET           = 0x12
-	AD_SET_ENOCEAN_SENDER_ID   = 0x13
-	AD_CHECK_ENTITY_ID_READY   = 0x14
-	AD_ENTER_TEST_MODE         = 0x15
+	AD_FACTORY_RESET         = 0x12
+	AD_SET_ENOCEAN_SENDER_ID = 0x13
+	AD_CHECK_ENTITY_ID_READY = 0x14
+	AD_ENTER_TEST_MODE       = 0x15
 
 	// ERL OTA over Thread — ADR 0007 step 4. The bridge PULLS: the cloud offers an
 	// image with BEGIN, the bridge asks for each 512 B slice by offset as its 2x512 B
