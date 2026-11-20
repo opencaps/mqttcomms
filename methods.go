@@ -60,6 +60,26 @@ const (
 	AD_ERL_OTA_SLICE     = 0x18
 	AD_ERL_OTA_END       = 0x19
 
+	// Ask the ERL for its version now (ADR 0007 D13). Empty body; the answer arrives
+	// as the usual ErlEvents inventory publish. Was in the firmware (nrf-common-lib
+	// orders.h) but missing here.
+	AD_ERL_GET_VERSION = 0x1A
+
+	// Device credential renewal (iot-smarter-followup docs/plans/
+	// device-credentials-renewal.md; nrf-common-lib src/cred/cred_renewal_wire.h).
+	// Big-endian. item: 1 key, 2 cert, 3 ca. One renewal = key + cert (+ ca), each
+	// staged and checked against its sha256 before the bridge writes anything.
+	//
+	//	CRED_BEGIN   renewalID[4] item[1] size[2] sha256[32]
+	//	CRED_CHUNK   renewalID[4] item[1] offset[2] data[1..512]   (in order)
+	//	CRED_COMMIT  renewalID[4]
+	//	CRED_RESULT  renewalID[4] status[1] reason[1]   bridge->cloud
+	//	             status: 0 ok, 1 refused (nothing written), 2 restored, 3 in progress
+	AD_CRED_BEGIN  = 0x1B
+	AD_CRED_CHUNK  = 0x1C
+	AD_CRED_COMMIT = 0x1D
+	AD_CRED_RESULT = 0x1E
+
 	AD_GOODBYE = 0xFF
 
 	// Time methods
